@@ -18,7 +18,7 @@ ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Filler, 
 function buildLast7Days() {
   const days = [];
   const now = new Date();
-  for (let i = 6; i >= 0; i -= 1) {
+  for (let i = 6; i >= 0; i--) {
     const d = new Date(now);
     d.setDate(now.getDate() - i);
     days.push(d);
@@ -70,24 +70,24 @@ export default function Trends({ logs, triggerInsight, city, aqi, loading, error
       {
         label: "Wheezing",
         data: trendModel.wheezing,
-        borderColor: "#5b50d6",
-        backgroundColor: "rgba(91,80,214,0.08)",
+        borderColor: "oklch(0.62 0.11 220)",
+        backgroundColor: "rgba(90,120,255,0.10)",
         fill: true,
         tension: 0.35,
       },
       {
         label: "Coughing",
         data: trendModel.coughing,
-        borderColor: "#dd6b2f",
-        backgroundColor: "rgba(221,107,47,0.08)",
+        borderColor: "oklch(0.56 0.09 200)",
+        backgroundColor: "rgba(80,110,220,0.10)",
         fill: true,
         tension: 0.35,
       },
       {
         label: "Shortness",
         data: trendModel.shortness,
-        borderColor: "#0f9b6f",
-        backgroundColor: "rgba(15,155,111,0.08)",
+        borderColor: "oklch(0.62 0.11 220)",
+        backgroundColor: "rgba(70,100,200,0.08)",
         fill: true,
         tension: 0.35,
       },
@@ -98,40 +98,78 @@ export default function Trends({ logs, triggerInsight, city, aqi, loading, error
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
-      legend: { display: true, labels: { boxWidth: 10, boxHeight: 10 } },
+      legend: {
+        display: true,
+        labels: {
+          boxWidth: 10,
+          boxHeight: 10,
+          color: "#334155",
+        },
+      },
     },
     scales: {
-      y: { min: 0, max: trendModel.yMax, ticks: { stepSize: 1 } },
-      x: { grid: { display: false } },
+      y: {
+        min: 0,
+        max: trendModel.yMax,
+        ticks: { stepSize: 1, color: "#64748b" },
+        grid: { color: "rgba(148,163,184,0.2)" },
+      },
+      x: {
+        grid: { display: false },
+        ticks: { color: "#64748b" },
+      },
     },
   };
 
   return (
-    <div className="space-y-3">
-      <header>
-        <h2 className="text-xl font-semibold text-stone-900">Trends</h2>
-        <p className="text-xs text-stone-500">Your weekly symptom pattern from saved logs</p>
+    <div className="space-y-4">
+      {/* Header */}
+      <header
+        className="relative overflow-hidden rounded-2xl p-5 text-white shadow-lg"
+        style={{
+          background:
+            "linear-gradient(135deg, oklch(0.62 0.11 220), oklch(0.56 0.09 200))",
+        }}
+      >
+        <div className="absolute -right-10 -top-10 h-32 w-32 rounded-full bg-white/10 blur-3xl" />
+
+        <h2 className="text-2xl font-semibold">Trends</h2>
+        <p className="text-sm text-white/80">
+          Your weekly symptom pattern and air quality insights
+        </p>
       </header>
 
-      <section className="space-y-2">
-        <p className="text-[11px] font-semibold uppercase tracking-wide text-stone-500">Air quality</p>
+      {/* Air quality */}
+      <Card title="Air quality">
         <Air city={city} aqi={aqi} loading={loading} error={error} onCity={onCity} showHeader={false} />
-      </section>
+      </Card>
 
+      {/* Chart */}
       <Card title="Symptom trends - this week">
         <div className="h-52">
           <Line data={data} options={options} />
         </div>
       </Card>
 
-      <Card title="Smart insight engine">
-        <p className="text-sm text-stone-700">
-          Most reported symptom this week: <strong>{trendModel.topSymptom}</strong> ({trendModel.topSymptomCount} logs).
+      {/* Insight */}
+      <div
+        className="rounded-3xl p-5 text-white shadow-lg"
+        style={{
+          background:
+            "linear-gradient(135deg, oklch(0.62 0.11 220), oklch(0.56 0.09 200))",
+        }}
+      >
+        <h3 className="text-lg font-semibold">Smart insight engine</h3>
+
+        <p className="mt-2 text-sm text-white/85">
+          Most reported symptom this week:{" "}
+          <strong>{trendModel.topSymptom}</strong> ({trendModel.topSymptomCount} logs)
         </p>
-        <p className="mt-1 text-xs text-stone-500">
-          Trigger model: {triggerInsight.topTrigger} ({triggerInsight.count}x historical seed data)
+
+        <p className="mt-1 text-xs text-white/70">
+          Trigger model: {triggerInsight.topTrigger} ({triggerInsight.count}x historical data)
         </p>
-      </Card>
+      </div>
     </div>
   );
 }
