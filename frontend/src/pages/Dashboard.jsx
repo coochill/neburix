@@ -18,11 +18,17 @@ export default function Dashboard({
 }) {
   return (
     <div className="space-y-3">
-      <section className="rounded-2xl bg-stone-900 p-5 text-white">
-        <p className="text-xs opacity-70">Good morning!</p>
-        <h1 className="text-2xl font-semibold">{displayName}</h1>
-        <p className="text-xs opacity-70">How are you breathing today?</p>
-      </section>
+  <section
+    className="rounded-2xl p-5 text-white"
+    style={{
+      backgroundColor: "oklch(0.6 0.118 184.704)",
+    }}
+  >
+    <p className="text-xs opacity-80">Good morning!</p>
+    <h1 className="text-2xl font-semibold">{displayName}</h1>
+    <p className="text-xs opacity-80">How are you breathing today?</p>
+  </section>
+
 
       <AQIBanner city={city} aqi={aqi} />
 

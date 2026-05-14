@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { doc, onSnapshot } from "firebase/firestore";
 import AuthScreen from "./components/AuthScreen";
 import Navbar from "./components/Navbar";
@@ -14,6 +14,7 @@ import { calcRiskScore, detectTriggers, summarizeWeek } from "./lib/insights";
 import { addUserLog, subscribeUserLogs } from "./lib/logStore";
 import { initialMeds, moods, weeklyLogs } from "./lib/mockData";
 import { exportWeeklyReport } from "./lib/report";
+import logo from "./assets/logo.png"
 
 function App() {
   const [tab, setTab] = useState("dashboard");
@@ -30,6 +31,9 @@ function App() {
   const [authLoading, setAuthLoading] = useState(true);
   const [authInitError, setAuthInitError] = useState("");
   const [logSyncError, setLogSyncError] = useState("");
+  const [open, setOpen] = useState(false);
+  const dropdownRef = useRef(null);
+  const closeDropdown = () => setOpen(false);
 
   // Keep Firebase initialized and tree-shaken as part of app startup.
   void firebaseApp;
@@ -280,28 +284,110 @@ function App() {
     );
   }
 
-  return (
-    <div className="mx-auto min-h-screen w-full max-w-md bg-stone-50 px-4 pb-24 pt-4">
-      <div className="mb-4 rounded-2xl border border-stone-200 bg-white px-4 py-3">
-        <div className="flex items-start justify-between gap-2">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-stone-500">Neburix</p>
-            <p className="text-sm text-stone-600">Asthma intelligence and care companion</p>
-            <p className="mt-1 text-xs text-stone-500">
-              Signed in as {profileName || user.displayName || user.email}
-            </p>
-          </div>
-          <button
-            onClick={logout}
-            className="rounded-lg border border-stone-300 bg-white px-3 py-1 text-xs font-semibold text-stone-700"
-          >
-            Sign out
-          </button>
-        </div>
-        {aqiError && <p className="mt-2 text-xs text-amber-700">{aqiError}</p>}
-      </div>
+  
 
-      {tab === "dashboard" && (
+  return (
+ <div className="mx-auto min-h-screen w-full max-w-md bg-stone-50 pb-24">
+      {/* Header */}
+      <header className="sticky top-0 z-40 border-b border-stone-200 bg-white/95 backdrop-blur">
+        <div className="flex items-center justify-between px-4 py-4">
+
+          {/* LEFT: Logo + Text */}
+          <div className="flex items-center gap-3">
+            <img
+              src={logo}
+              alt="NEBURIX Logo"
+              className="h-12 w-12 object-contain"
+            />
+
+            <div className="flex flex-col">
+              <h1 className="text-lg font-bold tracking-tight text-stone-900">
+                NEBURIX
+              </h1>
+
+              <p className="text-xs text-stone-500">
+                Asthma intelligence and care companion
+              </p>
+            </div>
+          </div>
+
+          {/* RIGHT: Profile Dropdown */}
+          <div className="relative" ref={dropdownRef}>
+            <button
+              onClick={() => setOpen((prev) => !prev)}
+              className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full border border-stone-300 bg-stone-100"
+            >
+              {user.photoURL ? (
+                <img
+                  src={user.photoURL}
+                  alt="avatar"
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                <span className="text-sm font-semibold text-stone-700">
+                  {(profileName || user.displayName || user.email || "U")
+                    .charAt(0)
+                    .toUpperCase()}
+                </span>
+              )}
+            </button>
+
+            {/* Dropdown */}
+            {open && (
+              <div className="absolute right-0 mt-2 w-56 rounded-2xl border border-stone-200 bg-white p-2 shadow-xl">
+                <div className="border-b border-stone-100 px-2 pb-2">
+                  <p className="text-sm font-medium text-stone-900">
+                    {profileName || user.displayName || "User"}
+                  </p>
+
+                  <p className="text-xs text-stone-500">
+                    Signed in as {user.email}
+                  </p>
+                </div>
+
+               <button
+  onClick={closeDropdown}
+  className="mt-2 w-full rounded-lg px-3 py-2 text-left text-sm text-stone-700 hover:bg-stone-100"
+>
+  Settings
+</button>
+
+                <button
+  onClick={closeDropdown}
+  className="w-full rounded-lg px-3 py-2 text-left text-sm text-stone-700 hover:bg-stone-100"
+>
+  Profile
+</button>
+
+                <div className="my-2 border-t border-stone-100" />
+
+               <button
+  onClick={() => {
+    logout();
+    closeDropdown();
+  }}
+  className="w-full rounded-lg px-3 py-2 text-left text-sm font-medium text-red-600 hover:bg-red-50"
+>
+  Sign out
+</button>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {aqiError && (
+          <p className="border-t border-stone-100 px-4 py-2 text-xs text-amber-700">
+            {aqiError}
+          </p>
+        )}
+      </header>
+
+      {/* Your content here */}
+      <div className="px-4 pt-4">
+        {/* Dashboard content */}
+      </div>
+    
+     {tab === "dashboard" && (
         <Dashboard
           displayName={profileName || user.displayName || user.email?.split("@")[0] || "Neburix User"}
           city={city}
