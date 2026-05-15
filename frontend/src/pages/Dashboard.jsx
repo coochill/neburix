@@ -16,16 +16,18 @@ export default function Dashboard({
   onQuickSymptom,
   onQuickSubmit,
 }) {
+  const moodColors = { 5: "#1D9E75", 4: "#5DCAA5", 3: "#888780", 2: "#F0997B", 1: "#D85A30" };
   return (
     <div className="space-y-3">
   <section
-    className="rounded-2xl p-5 text-white"
-    style={{
-      backgroundColor: "oklch(0.6 0.118 184.704)",
-    }}
-  >
-    <p className="text-xs opacity-80">Good morning!</p>
-    <h1 className="text-2xl font-semibold">{displayName}</h1>
+        className="relative overflow-hidden rounded-3xl p-6 text-white shadow-xl"
+        style={{
+          background:
+            "linear-gradient(135deg, oklch(0.62 0.11 220), oklch(0.56 0.09 200))",
+        }}
+      >
+    <p className="text-xs opacity-80">HELLO!</p>
+    <h1 className="mt-1 text-3xl font-bold tracking-tight">{displayName}</h1>
     <p className="text-xs opacity-80">How are you breathing today?</p>
   </section>
 
@@ -33,7 +35,7 @@ export default function Dashboard({
       <AQIBanner city={city} aqi={aqi} />
 
       <div className="grid grid-cols-4 gap-2">
-        <StatBox value={homeStats.latestMoodIcon} label={homeStats.latestMoodLabel} />
+        <StatBox value={<i className={`ti ${homeStats.latestMoodIcon}`}style={{ color: moodColors[homeStats.latestMoodValue], fontSize: "1.5rem" }}aria-hidden="true"/> }label={homeStats.latestMoodLabel}/>
         <StatBox value={String(homeStats.latestSymptomCount)} label="Symptoms" valueClassName="text-emerald-700" />
         <StatBox value={homeStats.topSymptom} label="Top pattern" />
         <StatBox value={Math.round(risk.score * 100)} label="Risk score" valueClassName="text-sky-800" />

@@ -22,16 +22,16 @@ export const initialMeds = [
 ];
 
 export const quickSymptoms = [
-  { id: "wheezing", label: "Wheezing", icon: "🫁" },
-  { id: "coughing", label: "Coughing", icon: "🤧" },
-  { id: "shortness", label: "Breath", icon: "💨" },
-  { id: "tightness", label: "Tightness", icon: "🫀" },
+  { id: "wheezing",  label: "Wheezing", icon: "ti-lungs" },
+  { id: "coughing",  label: "Coughing", icon: "ti-virus" },
+  { id: "shortness", label: "Breath",   icon: "ti-wind" },
+  { id: "tightness", label: "Tightness",icon: "ti-heart-rate-monitor" },
 ];
 
 export const moods = [
-  { value: 5, icon: "😄", label: "Great" },
-  { value: 4, icon: "😊", label: "Good" },
-  { value: 3, icon: "😐", label: "Okay" },
-  { value: 2, icon: "😟", label: "Poor" },
-  { value: 1, icon: "😰", label: "Bad" },
+  { value: 5, icon: "ti-mood-happy",     label: "Great" },
+  { value: 4, icon: "ti-mood-smile",     label: "Good" },
+  { value: 3, icon: "ti-mood-empty",      label: "Okay" },
+  { value: 2, icon: "ti-mood-sad",       label: "Poor" },
+  { value: 1, icon: "ti-mood-sad-dizzy", label: "Bad" },
 ];
