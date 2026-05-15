@@ -9,13 +9,14 @@ from flask_cors import CORS
 
 from routes.medication import medication_bp
 from services.scheduler import start_scheduler
+from routes.settings import settings_bp
 
 def load_waqi_token() -> str:
     env_token = os.getenv("WAQI_TOKEN")
     if env_token:
         return env_token
 
-    token_file = Path(__file__).resolve().parents[2] / "token.txt"
+    token_file = Path(__file__).resolve().parent / "token.txt"
     if not token_file.exists():
         return ""
 
@@ -30,11 +31,15 @@ def load_waqi_token() -> str:
 app = Flask(__name__)
 CORS(app)
 WAQI_TOKEN = load_waqi_token()
-start_scheduler()
 
 app.register_blueprint(
     medication_bp,
     url_prefix="/api/medications"
+)
+
+app.register_blueprint(
+    settings_bp,
+    url_prefix="/api/settings"
 )
 
 @app.get("/api/health")
@@ -70,4 +75,5 @@ def aqi_proxy():
 
 
 if __name__ == "__main__":
+    start_scheduler()
     app.run(host="0.0.0.0", port=5000, debug=True)

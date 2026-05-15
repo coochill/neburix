@@ -20,18 +20,3 @@ export const auth = getAuth(firebaseApp);
 export const db = getFirestore(firebaseApp);
 
 export const messaging = getMessaging(firebaseApp);
-
-onMessage(messaging, (payload) => {
-  console.log("FOREGROUND MESSAGE:", payload);
-
-  const title =
-    payload.data?.title || "Medication Reminder";
-
-  new Notification(title, {
-    body:
-      payload.data?.body ||
-      "Time to take your medication",
-
-    icon: "/logo.png",
-  });
-});

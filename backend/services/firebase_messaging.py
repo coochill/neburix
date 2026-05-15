@@ -1,30 +1,17 @@
 import firebase_admin
 from firebase_admin import messaging
 
-def send_medication_notification(token, title, body, data=None):
+def send_notification(token, title, body, data=None):
 
     message = messaging.Message(
         token=token,
 
-        # DATA PAYLOAD (IMPORTANT FOR WEB)
         data={
-            "title": title,
-            "body": body,
-            **(data or {})
-        },
-
-        # WEB PUSH CONFIG
-        webpush=messaging.WebpushConfig(
-            notification=messaging.WebpushNotification(
-                title=title,
-                body=body,
-                icon="/logo.png",
-            )
-        )
+            "title": str(title),
+            "body": str(body),
+            "type": "medication",
+            **({k: str(v) for k, v in (data or {}).items()})
+        }
     )
 
-    response = messaging.send(message)
-
-    print("FCM RESPONSE:", response)
-
-    return response
+    return messaging.send(message)

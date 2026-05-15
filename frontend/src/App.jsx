@@ -42,18 +42,6 @@ function App() {
   void firebaseApp;
 
   useEffect(() => {
-    const unsubscribe = onMessage(messaging, (payload) => {
-      console.log("Foreground message:", payload);
-
-      new Notification(payload.notification.title, {
-        body: payload.notification.body,
-      });
-    });
-
-    return () => unsubscribe();
-  }, []);
-
-  useEffect(() => {
     const unsub = subscribeAuth((nextUser) => {
       setUser(nextUser);
       setAuthLoading(false);

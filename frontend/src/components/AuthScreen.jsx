@@ -24,8 +24,13 @@ async function saveFcmToken(uid) {
       return;
     }
 
+    const registration = await navigator.serviceWorker.register(
+      "/firebase-messaging-sw.js"
+    );
+
     const token = await getToken(messaging, {
       vapidKey: import.meta.env.VITE_VAPID_KEY,
+      serviceWorkerRegistration: registration,
     });
 
     console.log("FCM TOKEN RESULT:", token);
