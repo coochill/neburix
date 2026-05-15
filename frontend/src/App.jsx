@@ -15,6 +15,9 @@ import { addUserLog, subscribeUserLogs } from "./lib/logStore";
 import { initialMeds, moods, weeklyLogs } from "./lib/mockData";
 import { exportWeeklyReport } from "./lib/report";
 import logo from "./assets/logo.png"
+import Settings from "./pages/Settings";
+import { onMessage } from "firebase/messaging";
+import { messaging } from "./lib/firebase";
 
 function App() {
   const [tab, setTab] = useState("dashboard");
@@ -37,6 +40,18 @@ function App() {
 
   // Keep Firebase initialized and tree-shaken as part of app startup.
   void firebaseApp;
+
+  useEffect(() => {
+    const unsubscribe = onMessage(messaging, (payload) => {
+      console.log("Foreground message:", payload);
+
+      new Notification(payload.notification.title, {
+        body: payload.notification.body,
+      });
+    });
+
+    return () => unsubscribe();
+  }, []);
 
   useEffect(() => {
     const unsub = subscribeAuth((nextUser) => {
@@ -345,12 +360,15 @@ function App() {
                   </p>
                 </div>
 
-               <button
-  onClick={closeDropdown}
-  className="mt-2 w-full rounded-lg px-3 py-2 text-left text-sm text-stone-700 hover:bg-stone-100"
->
-  Settings
-</button>
+                <button
+                  onClick={() => {
+                    setTab("settings");
+                    closeDropdown();
+                  }}
+                  className="mt-2 w-full rounded-lg px-3 py-2 text-left text-sm text-stone-700 hover:bg-stone-100"
+                >
+                  Settings
+                </button>
 
                 <button
   onClick={closeDropdown}
@@ -419,7 +437,15 @@ function App() {
           onCity={setCity}
         />
       )}
-      {tab === "meds" && <Meds meds={meds} onToggle={toggleMed} onAdd={addMedication} onExport={handleExportReport} />}
+      {tab === "meds" && (
+  <Meds
+    userId={user.uid}  
+    onToggle={toggleMed}
+    onAdd={addMedication}
+    onExport={handleExportReport}
+  />
+)}
+{tab === "settings" && <Settings user={user} />}
 
       <Navbar activeTab={tab} onChange={setTab} />
     </div>

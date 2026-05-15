@@ -1,208 +1,337 @@
-import { useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import Card from "../components/Card";
-import { Check, Plus, Pill, Clock } from "lucide-react";
+import { Check, Pill, Clock, Trash2 } from "lucide-react";
 
 const PRIMARY = "oklch(0.6 0.118 184.704)";
 
-export default function Meds({ meds, onToggle, onAdd, onExport }) {
+export default function Meds({ userId, onExport }) {
+  const [medsList, setMedsList] = useState([]);
   const [showForm, setShowForm] = useState(false);
+
+  const [scheduleType, setScheduleType] = useState("");
+
   const [name, setName] = useState("");
   const [dose, setDose] = useState("");
-  const [time, setTime] = useState("");
+  const [times, setTimes] = useState([]);
   const [type, setType] = useState("Maintenance inhaler");
 
-  const taken = meds.filter((med) => med.taken).length;
-  const adherence = meds.length ? Math.round((taken / meds.length) * 100) : 0;
+  useEffect(() => {
+    fetchMeds();
+  }, []);
 
-  function resetForm() {
-    setName("");
-    setDose("");
-    setTime("");
-    setType("Maintenance inhaler");
+  async function fetchMeds() {
+    try {
+      const res = await fetch(
+        `http://localhost:5000/api/medications/${userId}`
+      );
+
+      const data = await res.json();
+      setMedsList(data.data || []);
+    } catch (err) {
+      console.error("Failed to fetch meds:", err);
+    }
   }
 
-  function submitMedication(event) {
-    event.preventDefault();
+  async function submitMedication(e) {
+    e.preventDefault();
     if (!name.trim()) return;
 
-    onAdd({
-      name: name.trim(),
-      dose: dose.trim() || "-",
-      time: time || "-",
-      type,
+    await fetch(`http://localhost:5000/api/medications/${userId}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name: name.trim(),
+        dose: dose.trim() || "-",
+        type,
+        scheduleType,
+        times: scheduleType === "scheduled" ? times : [],
+      }),
     });
 
     resetForm();
     setShowForm(false);
+    fetchMeds();
   }
+
+  async function toggleMed(id) {
+    await fetch(
+      `http://localhost:5000/api/medications/${userId}/${id}/toggle`,
+      { method: "PATCH" }
+    );
+
+    fetchMeds();
+  }
+
+  async function deleteMed(id) {
+    await fetch(
+      `http://localhost:5000/api/medications/${userId}/${id}`,
+      { method: "DELETE" }
+    );
+
+    fetchMeds();
+  }
+
+  function resetForm() {
+    setName("");
+    setDose("");
+    setTimes([]);
+    setType("Maintenance inhaler");
+    setScheduleType("");
+  }
+
+  function getTimeSlot(timeStr) {
+    if (!timeStr) return ""; 
+
+    const hour = parseInt(timeStr.split(":")[0], 10);
+    if (Number.isNaN(hour)) return "";
+
+    return hour < 12 ? "morning" : "night";
+  }
+
+  // FLATTEN MEDS (SAFE VERSION)
+  const doseItems = useMemo(() => {
+    const items = [];
+
+    medsList.forEach((med) => {
+      const list =
+        med.scheduleType === "as_needed"
+          ? [""]
+          : med.time
+          ? [med.time]
+          : med.times?.length
+          ? med.times
+          : [];
+
+      list.forEach((t, idx) => {
+        items.push({
+          id: `${med.id}-${idx}`,
+          parentId: med.id,
+          name: med.name,
+          dose: med.dose,
+          type: med.type,
+          time: t,
+          slot:
+            med.scheduleType === "as_needed"
+              ? "as_needed"
+              : getTimeSlot(t),
+          taken: med.taken,
+        });
+      });
+    });
+
+    return items;
+  }, [medsList]);
+
+  const morningMeds = doseItems.filter((d) => d.slot === "morning");
+  const nightMeds = doseItems.filter((d) => d.slot === "night");
+  const asNeededMeds = doseItems.filter((d) => d.slot === "as_needed");
+
+  const taken = medsList.filter((m) => m.taken).length;
+  const adherence = medsList.length
+    ? Math.round((taken / medsList.length) * 100)
+    : 0;
 
   return (
     <div className="space-y-5">
 
-      {/* Header */}
-     <header
-  className="relative overflow-hidden rounded-2xl p-4 text-white shadow-md"
-  style={{
-    background:
-      "linear-gradient(135deg, oklch(0.62 0.11 215), oklch(0.56 0.09 205))",
-  }}
->
-  <div className="absolute -right-8 -top-8 h-28 w-28 rounded-xl bg-white/10 blur-2xl" />
+      <header className="rounded-2xl p-4 text-white shadow-md"
+        style={{
+          background:
+            "linear-gradient(135deg, oklch(0.62 0.11 215), oklch(0.56 0.09 205))",
+        }}
+      >
+        <h2 className="text-2xl font-semibold">Medications</h2>
 
-  <div className="relative">
-    <h2 className="text-2xl font-semibold tracking-tight">
-      Medications
-    </h2>
-
-    <p className="mt-1 text-xs text-white/80">
-      Track adherence and export doctor report
-    </p>
-
-    <div className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-white/15 px-2.5 py-1 text-[11px]">
-      <Pill className="h-3 w-3" />
-      {adherence}% adherence
-    </div>
-  </div>
-</header>
-
-      {/* Med list */}
-      <Card title="Today">
-        <div className="space-y-3">
-
-          {meds.map((med) => (
-            <div
-              key={med.id}
-              className="flex items-center justify-between rounded-2xl border border-stone-100 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
-            >
-              <div className="flex items-center gap-3">
-                <div
-                  className="flex h-10 w-10 items-center justify-center rounded-xl text-white"
-                  style={{ backgroundColor: PRIMARY }}
-                >
-                  <Pill className="h-5 w-5" />
-                </div>
-
-                <div>
-                  <p className="text-sm font-semibold text-stone-900">
-                    {med.name} — {med.dose}
-                  </p>
-
-                  <p className="flex items-center gap-1 text-xs text-stone-500">
-                    <Clock className="h-3 w-3" />
-                    {med.type} • {med.time}
-                  </p>
-                </div>
-              </div>
-
-              <button
-                onClick={() => onToggle(med.id)}
-                className="rounded-full px-3 py-1.5 text-xs font-semibold transition"
-                style={{
-                  backgroundColor: med.taken ? PRIMARY : "#f4f4f5",
-                  color: med.taken ? "white" : "#52525b",
-                }}
-              >
-                {med.taken ? (
-                  <span className="flex items-center gap-1">
-                    <Check className="h-3 w-3" /> Taken
-                  </span>
-                ) : (
-                  "Mark"
-                )}
-              </button>
-            </div>
-          ))}
-
-          {/* Add button */}
-          <button
-            onClick={() => setShowForm((prev) => !prev)}
-            className="flex w-full items-center justify-center gap-2 rounded-2xl border border-dashed border-stone-300 bg-white py-3 text-sm font-semibold text-stone-700 transition hover:bg-stone-50"
-          >
-            <Plus className="h-4 w-4" />
-            {showForm ? "Cancel" : "Add medication"}
-          </button>
-
-          {/* Form */}
-          {showForm && (
-            <form
-              onSubmit={submitMedication}
-              className="space-y-3 rounded-2xl border border-stone-200 bg-stone-50 p-4"
-            >
-              <input
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="Medication name"
-                className="w-full rounded-xl border border-stone-300 px-3 py-2 text-sm outline-none focus:border-stone-900"
-                required
-              />
-
-              <div className="grid grid-cols-2 gap-2">
-                <input
-                  value={dose}
-                  onChange={(e) => setDose(e.target.value)}
-                  placeholder="Dose"
-                  className="w-full rounded-xl border border-stone-300 px-3 py-2 text-sm outline-none focus:border-stone-900"
-                />
-                <input
-                  type="time"
-                  value={time}
-                  onChange={(e) => setTime(e.target.value)}
-                  className="w-full rounded-xl border border-stone-300 px-3 py-2 text-sm outline-none focus:border-stone-900"
-                />
-              </div>
-
-              <select
-                value={type}
-                onChange={(e) => setType(e.target.value)}
-                className="w-full rounded-xl border border-stone-300 px-3 py-2 text-sm outline-none focus:border-stone-900"
-              >
-                <option>Maintenance inhaler</option>
-                <option>Rescue inhaler</option>
-                <option>Oral medication</option>
-                <option>Nebulizer</option>
-              </select>
-
-              <button
-                type="submit"
-                className="w-full rounded-xl px-3 py-2 text-sm font-semibold text-white shadow-md transition hover:opacity-90"
-                style={{ backgroundColor: PRIMARY }}
-              >
-                Save medication
-              </button>
-            </form>
-          )}
+        <div className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-white/15 px-2.5 py-1 text-[11px]">
+          <Pill className="h-3 w-3" />
+          {adherence}% adherence
         </div>
+      </header>
+
+      {/* MORNING */}
+      <Card title="Morning">
+        {morningMeds.length === 0 && (
+          <p className="text-xs text-gray-500">No morning medications</p>
+        )}
+
+        {morningMeds.map((med) => (
+          <MedItem
+            key={med.id}
+            med={med}
+            onToggle={() => toggleMed(med.parentId)}
+            onDelete={() => deleteMed(med.parentId)}
+          />
+        ))}
       </Card>
 
-      {/* Adherence */}
-      <Card title="Medication adherence">
-        <div className="space-y-2">
-          <p className="text-sm text-stone-700">
-            {adherence}% adherence this week
-          </p>
+      {/* NIGHT */}
+      <Card title="Night">
+        {nightMeds.length === 0 && (
+          <p className="text-xs text-gray-500">No night medications</p>
+        )}
 
-          <div className="h-2 w-full rounded-full bg-stone-200">
-            <div
-              className="h-2 rounded-full"
-              style={{
-                width: `${adherence}%`,
-                backgroundColor: PRIMARY,
-              }}
+        {nightMeds.map((med) => (
+          <MedItem
+            key={med.id}
+            med={med}
+            onToggle={() => toggleMed(med.parentId)}
+            onDelete={() => deleteMed(med.parentId)}
+          />
+        ))}
+      </Card>
+
+      {/* AS NEEDED */}
+      <Card title="As Needed">
+        {asNeededMeds.length === 0 && (
+          <p className="text-xs text-gray-500">No as-needed medications</p>
+        )}
+
+        {asNeededMeds.map((med) => (
+          <MedItem
+            key={med.id}
+            med={med}
+            onToggle={() => toggleMed(med.parentId)}
+            onDelete={() => deleteMed(med.parentId)}
+          />
+        ))}
+      </Card>
+
+      {/* FORM */}
+      <button
+        onClick={() => setShowForm((p) => !p)}
+        className="w-full rounded-2xl border border-dashed py-3 text-sm"
+      >
+        {showForm ? "Cancel" : "Add medication"}
+      </button>
+
+      {showForm && (
+        <form onSubmit={submitMedication} className="space-y-4 rounded-2xl border bg-stone-50 p-4">
+
+          <input
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Medication name"
+            className="w-full rounded-xl border px-3 py-2 text-sm"
+            required
+          />
+
+          <div className="grid grid-cols-2 gap-2">
+            <input
+              value={dose}
+              onChange={(e) => setDose(e.target.value)}
+              placeholder="Dose"
+              className="rounded-xl border px-3 py-2 text-sm"
             />
+
+            <select
+              value={type}
+              onChange={(e) => setType(e.target.value)}
+              className="rounded-xl border px-3 py-2 text-sm"
+            >
+              <option>Maintenance inhaler</option>
+              <option>Rescue inhaler</option>
+              <option>Oral medication</option>
+              <option>Nebulizer</option>
+            </select>
           </div>
-        </div>
+
+          <div className="flex gap-2">
+            <button type="button" onClick={() => setScheduleType("scheduled")}
+              className={`rounded-xl border px-3 py-2 text-sm ${scheduleType === "scheduled" ? "bg-stone-200" : ""}`}>
+              Scheduled
+            </button>
+
+            <button type="button" onClick={() => setScheduleType("as_needed")}
+              className={`rounded-xl border px-3 py-2 text-sm ${scheduleType === "as_needed" ? "bg-stone-200" : ""}`}>
+              As Needed
+            </button>
+          </div>
+
+          {scheduleType === "scheduled" && (
+            <div>
+              <button type="button"
+                onClick={() => setTimes((p) => [...p, ""])}
+                className="text-xs text-blue-600">
+                + Add time
+              </button>
+
+              {times.map((t, i) => (
+                <input
+                  key={i}
+                  type="time"
+                  value={t}
+                  onChange={(e) => {
+                    const copy = [...times];
+                    copy[i] = e.target.value;
+                    setTimes(copy);
+                  }}
+                  className="w-full rounded-xl border px-3 py-2 text-sm"
+                />
+              ))}
+            </div>
+          )}
+
+          <button
+            type="submit"
+            className="w-full rounded-xl py-2 text-white"
+            style={{ backgroundColor: PRIMARY }}
+          >
+            Save medication
+          </button>
+        </form>
+      )}
+
+      <Card title="Adherence">
+        <p className="text-sm">{adherence}% adherence this week</p>
       </Card>
 
-      {/* Export */}
       <button
         onClick={onExport}
-        className="w-full rounded-2xl py-3 text-sm font-semibold text-white shadow-lg transition hover:opacity-90"
+        className="w-full rounded-2xl py-3 text-white"
         style={{
           background: `linear-gradient(135deg, ${PRIMARY}, oklch(0.52 0.1 200))`,
         }}
       >
         Download Doctor PDF Report
       </button>
+    </div>
+  );
+}
+
+/* ITEM */
+function MedItem({ med, onToggle, onDelete }) {
+  return (
+    <div className="flex items-center justify-between rounded-xl border bg-white p-3">
+      <div>
+        <p className="font-semibold">
+          {med.name} — {med.dose}
+        </p>
+
+        <p className="text-xs text-gray-500 flex items-center gap-1">
+          <Clock className="h-3 w-3" />
+          {med.type}
+        </p>
+      </div>
+
+      <div className="flex gap-2">
+        <button
+          onClick={onToggle}
+          className="rounded-full px-3 py-1 text-xs"
+          style={{
+            backgroundColor: med.taken ? PRIMARY : "#eee",
+            color: med.taken ? "white" : "#333",
+          }}
+        >
+          <Check className="h-3 w-3" />
+        </button>
+
+        <button
+          onClick={onDelete}
+          className="rounded-full px-3 py-1 text-xs text-red-600 hover:bg-red-50"
+        >
+          <Trash2 className="h-3 w-3" />
+        </button>
+      </div>
     </div>
   );
 }

@@ -1,6 +1,10 @@
 import { useState } from "react";
 import { login, mapAuthError, register } from "../lib/auth";
 import logo from "../assets/logo.png";
+import { getToken } from "firebase/messaging";
+import { messaging } from "../lib/firebase"; 
+import { doc, setDoc, arrayUnion } from "firebase/firestore";
+import { db } from "../lib/firebase";
 
 export default function AuthScreen() {
   const [mode, setMode] = useState("login");
@@ -11,17 +15,52 @@ export default function AuthScreen() {
   const [error, setError] = useState("");
   const [focused, setFocused] = useState("");
 
+async function saveFcmToken(uid) {
+  try {
+    const permission = await Notification.requestPermission();
+
+    if (permission !== "granted") {
+      console.log("Notifications not allowed");
+      return;
+    }
+
+    const token = await getToken(messaging, {
+      vapidKey: import.meta.env.VITE_VAPID_KEY,
+    });
+
+    console.log("FCM TOKEN RESULT:", token);
+
+    if (!token) return;
+
+    await setDoc(
+      doc(db, "users", uid),
+      {
+        fcmTokens: arrayUnion(token),
+      },
+      { merge: true }
+    );
+
+  } catch (err) {
+    console.log("FCM token error:", err);
+  }
+}
+
   async function onSubmit(event) {
     event.preventDefault();
     setError("");
     setBusy(true);
 
     try {
+      let user;
+
       if (mode === "login") {
-        await login(email, password);
+        user = await login(email, password);
       } else {
-        await register(email, password, username);
+        user = await register(email, password, username);
       }
+
+      await saveFcmToken(user.uid);
+
     } catch (err) {
       setError(mapAuthError(err));
     } finally {

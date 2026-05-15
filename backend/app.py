@@ -7,6 +7,8 @@ import requests
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 
+from routes.medication import medication_bp
+from services.scheduler import start_scheduler
 
 def load_waqi_token() -> str:
     env_token = os.getenv("WAQI_TOKEN")
@@ -28,7 +30,12 @@ def load_waqi_token() -> str:
 app = Flask(__name__)
 CORS(app)
 WAQI_TOKEN = load_waqi_token()
+start_scheduler()
 
+app.register_blueprint(
+    medication_bp,
+    url_prefix="/api/medications"
+)
 
 @app.get("/api/health")
 def health():
