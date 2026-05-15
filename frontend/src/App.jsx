@@ -7,6 +7,8 @@ import HealthLog from "./pages/HealthLog";
 import Log from "./pages/Log";
 import Meds from "./pages/Meds";
 import Trends from "./pages/Trends";
+import AttackGuidance from "./components/AttackGuidance";
+import Settings from "./pages/Settings";
 import { ensureUserProfile, logout, mapAuthError, subscribeAuth } from "./lib/auth";
 import { fetchAQI } from "./lib/aqi";
 import { db, firebaseApp } from "./lib/firebase";
@@ -31,6 +33,7 @@ function App() {
   const [authLoading, setAuthLoading] = useState(true);
   const [authInitError, setAuthInitError] = useState("");
   const [logSyncError, setLogSyncError] = useState("");
+  const [medAlert, setMedAlert] = useState("");
   const [open, setOpen] = useState(false);
   const dropdownRef = useRef(null);
   const closeDropdown = () => setOpen(false);
@@ -214,8 +217,46 @@ function App() {
     setTab("health-log");
   }
 
-  function toggleMed(id) {
-    setMeds((prev) => prev.map((med) => (med.id === id ? { ...med, taken: !med.taken } : med)));
+  async function toggleMed(id) {
+    let updatedMedication = null;
+
+    const updatedMeds = meds.map((med) => {
+      if (med.id === id) {
+        updatedMedication = {
+          ...med,
+          taken: !med.taken,
+        };
+
+        return updatedMedication;
+      }
+
+      return med;
+    });
+
+    setMeds(updatedMeds);
+
+    // Send adherence check to backend
+    try {
+      const response = await fetch("http://127.0.0.1:5000/api/meds/check", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          uid: user.uid,
+          name: updatedMedication.name,
+          time: updatedMedication.time,
+          taken: updatedMedication.taken,
+        }),
+      });
+
+      const data = await response.json();
+
+      setMedAlert(data.message || "");
+
+    } catch (error) {
+      console.error("Medication adherence check failed:", error);
+    }
   }
 
   function addMedication(payload) {
@@ -346,11 +387,14 @@ function App() {
                 </div>
 
                <button
-  onClick={closeDropdown}
-  className="mt-2 w-full rounded-lg px-3 py-2 text-left text-sm text-stone-700 hover:bg-stone-100"
->
-  Settings
-</button>
+                onClick={() => {
+                  setTab("settings");
+                  closeDropdown();
+                }}
+                className="mt-2 w-full rounded-lg px-3 py-2 text-left text-sm text-stone-700 hover:bg-stone-100"
+              >
+                Settings
+              </button>
 
                 <button
   onClick={closeDropdown}
@@ -387,7 +431,8 @@ function App() {
         {/* Dashboard content */}
       </div>
     
-     {tab === "dashboard" && (
+    {tab === "dashboard" && (
+      <>
         <Dashboard
           displayName={profileName || user.displayName || user.email?.split("@")[0] || "Neburix User"}
           city={city}
@@ -401,7 +446,10 @@ function App() {
           onQuickSymptom={handleQuickSymptomToggle}
           onQuickSubmit={handleQuickSubmit}
         />
-      )}
+
+        <AttackGuidance user={user} />
+      </>
+    )}
       {tab === "health-log" && (
         <HealthLog
           logs={logs}
@@ -419,7 +467,26 @@ function App() {
           onCity={setCity}
         />
       )}
-      {tab === "meds" && <Meds meds={meds} onToggle={toggleMed} onAdd={addMedication} onExport={handleExportReport} />}
+      {tab === "meds" && (
+        <>
+          {medAlert && (
+            <div className="mx-4 mb-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+              {medAlert}
+            </div>
+          )}
+
+          <Meds
+            meds={meds}
+            onToggle={toggleMed}
+            onAdd={addMedication}
+            onExport={handleExportReport}
+          />
+        </>
+      )}
+
+      {tab === "settings" && (
+  <Settings user={user} />
+)}
 
       <Navbar activeTab={tab} onChange={setTab} />
     </div>

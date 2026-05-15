@@ -1,5 +1,6 @@
 from __future__ import annotations
-
+import firebase_admin
+from firebase_admin import credentials, firestore
 import os
 from pathlib import Path
 
@@ -27,6 +28,10 @@ def load_waqi_token() -> str:
 
 app = Flask(__name__)
 CORS(app)
+cred = credentials.Certificate("firebase_key.json")
+firebase_admin.initialize_app(cred)
+
+db = firestore.client()
 WAQI_TOKEN = load_waqi_token()
 
 
@@ -61,6 +66,285 @@ def aqi_proxy():
             502,
         )
 
+@app.post("/api/attack/start")
+def start_attack_session():
+    try:
+        data = request.get_json()
+
+        uid = data.get("uid")
+        severity = data.get("severity", "moderate")
+
+        if not uid:
+            return jsonify({
+                "status": "error",
+                "message": "uid is required"
+            }), 400
+
+        session_data = {
+            "uid": uid,
+            "severity": severity,
+            "startedAt": firestore.SERVER_TIMESTAMP,
+            "checkIns": 0,
+            "improved": False,
+            "emergency": False
+        }
+
+        doc_ref = db.collection("attack_sessions").add(session_data)
+
+        return jsonify({
+            "status": "success",
+            "message": "Attack session started",
+            "sessionId": doc_ref[1].id
+        })
+
+    except Exception as e:
+        return jsonify({
+            "status": "error",
+            "message": str(e)
+        }), 500
+
+
+
+@app.post("/api/attack/check")
+def attack_checkin():
+    try:
+        data = request.get_json()
+
+        session_id = data.get("sessionId")
+        improved = data.get("improved")
+
+        if not session_id:
+            return jsonify({
+                "status": "error",
+                "message": "sessionId is required"
+            }), 400
+
+        doc_ref = db.collection("attack_sessions").document(session_id)
+        doc = doc_ref.get()
+
+        if not doc.exists:
+            return jsonify({
+                "status": "error",
+                "message": "Attack session not found"
+            }), 404
+
+        session_data = doc.to_dict()
+
+        current_checkins = session_data.get("checkIns", 0) + 1
+
+        emergency = False
+
+        # Escalation logic
+        if improved is False and current_checkins >= 2:
+            emergency = True
+
+        doc_ref.update({
+            "checkIns": current_checkins,
+            "improved": improved,
+            "emergency": emergency
+        })
+
+        return jsonify({
+            "status": "success",
+            "checkIns": current_checkins,
+            "emergency": emergency,
+            "message": (
+                "Seek immediate medical attention."
+                if emergency
+                else "Continue monitoring symptoms."
+            )
+        })
+
+    except Exception as e:
+        return jsonify({
+            "status": "error",
+            "message": str(e)
+        }), 500
+    
+@app.get("/api/attack/guide")
+def get_attack_guide():
+    try:
+        guide_steps = [
+            {
+                "step": 1,
+                "title": "Sit Upright",
+                "instruction": "Sit upright and try to stay calm.",
+                "timerSeconds": 30
+            },
+            {
+                "step": 2,
+                "title": "Use Rescue Inhaler",
+                "instruction": "Take 2 puffs of your rescue inhaler.",
+                "timerSeconds": 60
+            },
+            {
+                "step": 3,
+                "title": "Wait and Monitor",
+                "instruction": "Wait 5 minutes and monitor breathing.",
+                "timerSeconds": 300
+            },
+            {
+                "step": 4,
+                "title": "Check Symptoms",
+                "instruction": "If symptoms are not improving, seek emergency care.",
+                "timerSeconds": 0
+            }
+        ]
+
+        return jsonify({
+            "status": "success",
+            "guide": guide_steps,
+            "emergencyContact": "911",
+            "hospitalCTA": True
+        })
+
+    except Exception as e:
+        return jsonify({
+            "status": "error",
+            "message": str(e)
+        }), 500
+
+
+@app.post("/api/meds/check")
+def check_medication_adherence():
+    try:
+        data = request.get_json()
+
+        uid = data.get("uid")
+        medication_name = data.get("name")
+        scheduled_time = data.get("time")
+        taken = data.get("taken")
+
+        if not uid or not medication_name:
+            return jsonify({
+                "status": "error",
+                "message": "uid and medication name are required"
+            }), 400
+
+        # Detect missed dose
+        if taken is False:
+
+            missed_data = {
+                "uid": uid,
+                "medication": medication_name,
+                "scheduledTime": scheduled_time,
+                "missed": True,
+                "createdAt": firestore.SERVER_TIMESTAMP
+            }
+
+            db.collection("missed_doses").add(missed_data)
+
+            return jsonify({
+                "status": "warning",
+                "missedDose": True,
+                "message": f"Missed dose detected for {medication_name}. Please take your medication."
+            })
+
+        return jsonify({
+            "status": "success",
+            "missedDose": False,
+            "message": "Medication taken successfully."
+        })
+
+    except Exception as e:
+        return jsonify({
+            "status": "error",
+            "message": str(e)
+        }), 500
+    
+@app.post("/api/settings/save")
+def save_settings():
+    try:
+        data = request.get_json()
+
+        uid = data.get("uid")
+
+        if not uid:
+            return jsonify({
+                "status": "error",
+                "message": "uid is required"
+            }), 400
+
+        settings_data = {
+            "uid": uid,
+            "caregiverName": data.get("caregiverName", ""),
+            "caregiverEmail": data.get("caregiverEmail", ""),
+            "preferences": data.get("preferences", {}),
+            "updatedAt": firestore.SERVER_TIMESTAMP
+        }
+
+        db.collection("user_settings").document(uid).set(settings_data)
+
+        return jsonify({
+            "status": "success",
+            "message": "Settings saved successfully."
+        })
+
+    except Exception as e:
+        return jsonify({
+            "status": "error",
+            "message": str(e)
+        }), 500
+
+
+@app.get("/api/settings/<uid>")
+def get_settings(uid):
+    try:
+        doc_ref = db.collection("user_settings").document(uid)
+        doc = doc_ref.get()
+
+        if not doc.exists:
+            return jsonify({
+                "status": "error",
+                "message": "Settings not found"
+            }), 404
+
+        return jsonify({
+            "status": "success",
+            "settings": doc.to_dict()
+        })
+
+    except Exception as e:
+        return jsonify({
+            "status": "error",
+            "message": str(e)
+        }), 500
+
+@app.post("/api/report/share")
+def share_report():
+    try:
+        data = request.get_json()
+
+        uid = data.get("uid")
+        recipient_email = data.get("recipientEmail")
+        week_label = data.get("weekLabel")
+
+        if not uid or not recipient_email:
+            return jsonify({
+                "status": "error",
+                "message": "uid and recipientEmail are required"
+            }), 400
+
+        report_data = {
+            "uid": uid,
+            "recipientEmail": recipient_email,
+            "weekLabel": week_label,
+            "sharedAt": firestore.SERVER_TIMESTAMP
+        }
+
+        db.collection("shared_reports").add(report_data)
+
+        return jsonify({
+            "status": "success",
+            "message": f"Report shared with {recipient_email}"
+        })
+
+    except Exception as e:
+        return jsonify({
+            "status": "error",
+            "message": str(e)
+        }), 500
+    
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)
