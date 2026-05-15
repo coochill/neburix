@@ -199,7 +199,12 @@ export default function Meds({ userId, onExport }) {
       {/* FORM */}
       <button
         onClick={() => setShowForm((p) => !p)}
-        className="w-full rounded-2xl border border-dashed py-3 text-sm"
+        className="w-full rounded-2xl py-3 text-sm text-white"
+        style={{
+          background: showForm
+            ? "#aaa"
+            : "linear-gradient(135deg, oklch(0.62 0.11 220), oklch(0.56 0.09 200))",
+        }}
       >
         {showForm ? "Cancel" : "Add medication"}
       </button>
@@ -224,35 +229,53 @@ export default function Meds({ userId, onExport }) {
             />
 
             <select
-              value={type}
-              onChange={(e) => setType(e.target.value)}
-              className="rounded-xl border px-3 py-2 text-sm"
-            >
-              <option>Maintenance inhaler</option>
-              <option>Rescue inhaler</option>
-              <option>Oral medication</option>
-              <option>Nebulizer</option>
-            </select>
+            value={type}
+            onChange={(e) => setType(e.target.value)}
+            className="rounded-xl border px-3 py-2 text-sm"
+          >
+            <option style={{ background: type === "Maintenance inhaler" ? "oklch(0.62 0.11 220)" : "white", color: type === "Maintenance inhaler" ? "white" : "#333" }}>Maintenance inhaler</option>
+            <option style={{ background: type === "Rescue inhaler" ? "oklch(0.62 0.11 220)" : "white", color: type === "Rescue inhaler" ? "white" : "#333" }}>Rescue inhaler</option>
+            <option style={{ background: type === "Oral medication" ? "oklch(0.62 0.11 220)" : "white", color: type === "Oral medication" ? "white" : "#333" }}>Oral medication</option>
+            <option style={{ background: type === "Nebulizer" ? "oklch(0.62 0.11 220)" : "white", color: type === "Nebulizer" ? "white" : "#333" }}>Nebulizer</option>
+          </select>
           </div>
 
           <div className="flex gap-2">
             <button type="button" onClick={() => setScheduleType("scheduled")}
-              className={`rounded-xl border px-3 py-2 text-sm ${scheduleType === "scheduled" ? "bg-stone-200" : ""}`}>
+              className="rounded-xl px-3 py-2 text-sm text-white"
+              style={{
+                background: scheduleType === "scheduled"
+                  ? "linear-gradient(135deg, oklch(0.62 0.11 220), oklch(0.56 0.09 200))"
+                  : "#e7e5e4",
+                color: scheduleType === "scheduled" ? "white" : "#333",
+              }}>
               Scheduled
             </button>
 
             <button type="button" onClick={() => setScheduleType("as_needed")}
-              className={`rounded-xl border px-3 py-2 text-sm ${scheduleType === "as_needed" ? "bg-stone-200" : ""}`}>
+              className="rounded-xl px-3 py-2 text-sm"
+              style={{
+                background: scheduleType === "as_needed"
+                  ? "linear-gradient(135deg, oklch(0.62 0.11 220), oklch(0.56 0.09 200))"
+                  : "#e7e5e4",
+                color: scheduleType === "as_needed" ? "white" : "#333",
+              }}>
               As Needed
             </button>
           </div>
 
           {scheduleType === "scheduled" && (
             <div>
-              <button type="button"
+              <button
+                type="button"
                 onClick={() => setTimes((p) => [...p, ""])}
-                className="text-xs text-blue-600">
-                + Add time
+                className="flex items-center gap-1.5 rounded-xl px-3 py-2 text-sm text-white"
+                style={{
+                  background: "linear-gradient(135deg, oklch(0.62 0.11 220), oklch(0.56 0.09 200))",
+                }}
+              >
+                <span className="text-base leading-none">+</span>
+                Add time
               </button>
 
               {times.map((t, i) => (

@@ -11,14 +11,24 @@ export default function AQIBanner({ city, aqi }) {
   const status = getAQIStatus(aqi);
 
   return (
-    <div className={`rounded-xl border p-3 ${bannerTheme(aqi)}`}>
+    <div className={`rounded-3xl border p-4 shadow-sm ${bannerTheme(aqi)}`}>
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-xs font-semibold">Air quality · {city}</p>
-          <p className="text-xs opacity-80">{status}</p>
+          <p className="text-sm font-semibold">
+            Air quality · {city}
+          </p>
+
+          <p className="text-xs">
+            {status}
+          </p>
         </div>
-        <p className="rounded-md bg-white/80 px-2 py-1 font-mono text-sm font-semibold">{aqi}</p>
+
+        <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white text-lg font-bold shadow-sm">
+          {aqi}
+        </div>
+
       </div>
     </div>
   );
 }
+

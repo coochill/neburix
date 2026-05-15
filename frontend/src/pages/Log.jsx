@@ -128,8 +128,9 @@ export default function Log({ logs, error, showHeader = true }) {
       <div className="mt-4 space-y-2">
         <div className="rounded-xl bg-white/10 p-2.5 backdrop-blur">
           <p className="text-[10px] text-white/70">Mood</p>
-          <p className="text-xs font-medium">
-            {moodMap[latest.mood]?.icon} {moodMap[latest.mood]?.label}
+          <p className="text-xs font-medium flex items-center gap-1">
+            <i className={`ti ${moodMap[latest.mood]?.icon}`} aria-hidden="true" />
+            {moodMap[latest.mood]?.label}
           </p>
         </div>
 
@@ -189,8 +190,9 @@ export default function Log({ logs, error, showHeader = true }) {
                   </div>
 
                   <div>
-                    <p className="text-xs font-semibold text-stone-900">
-                      {mood?.icon} {mood?.label}
+                    <p className="text-xs font-semibold text-stone-900 flex items-center gap-1">
+                      <i className={`ti ${mood?.icon}`} aria-hidden="true" />
+                      {mood?.label}
                     </p>
 
                     <p className="text-[10px] text-stone-500">
@@ -280,3 +282,4 @@ export default function Log({ logs, error, showHeader = true }) {
     </div>
   );
 }
+
