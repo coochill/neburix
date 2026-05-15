@@ -9,13 +9,13 @@ def start_scheduler():
     scheduler.add_job(
         check_medications,
         "interval",
-        minutes=1
+        minutes=59
     )
 
     scheduler.add_job(
         check_aqi_alerts,
         "interval",
-        minutes=1
+        minutes=59
     )
 
     scheduler.start()
