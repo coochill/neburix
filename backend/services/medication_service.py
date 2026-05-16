@@ -1,6 +1,5 @@
 from firebase_config import db
 
-
 def get_medications(user_id):
     meds_ref = db.collection("users").document(user_id).collection("medication")
 

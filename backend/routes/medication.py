@@ -43,7 +43,7 @@ def toggle(user_id, medication_id):
     if not updated:
         return error("Medication not found", 404)
 
-    return success("Medication updated")
+    return success(updated["message"], updated)
 
 
 @medication_bp.route("/<user_id>/<medication_id>", methods=["DELETE"])

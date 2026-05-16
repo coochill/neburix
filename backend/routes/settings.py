@@ -1,55 +1,100 @@
 from flask import Blueprint, request
 from firebase_config import db
+from firebase_admin import firestore
 from utils.response import success, error
 
 settings_bp = Blueprint("settings", __name__)
 
 DEFAULT_SETTINGS = {
+    "caregiverName": "",
+    "caregiverEmail": "",
+
+    "preferences": {
+        "aqiAlerts": True,
+        "medAlerts": True,
+    },
+
     "aqi_mild": 51,
     "aqi_moderate": 101,
     "aqi_severe": 151,
 }
 
+
 @settings_bp.route("/<user_id>", methods=["GET"])
 def get_settings(user_id):
 
-    ref = db.collection("user_settings").document(user_id)
-    doc = ref.get()
+    try:
+        ref = db.collection("user_settings").document(user_id)
 
-    if not doc.exists:
-        return success("Settings fetched", {
+        doc = ref.get()
+
+        if not doc.exists:
+            return success(
+                "Settings fetched",
+                DEFAULT_SETTINGS
+            )
+
+        data = doc.to_dict()
+
+        merged = {
             **DEFAULT_SETTINGS,
-            "uid": user_id
-        })
+            **data,
+        }
 
-    data = doc.to_dict()
+        merged["preferences"] = {
+            **DEFAULT_SETTINGS["preferences"],
+            **data.get("preferences", {}),
+        }
 
-    merged = {**DEFAULT_SETTINGS, **data}
+        return success(
+            "Settings fetched",
+            merged
+        )
 
-    return success("Settings fetched", merged)
+    except Exception as e:
+
+        return error(str(e))
+
 
 @settings_bp.route("/<user_id>", methods=["PATCH"])
 def update_settings(user_id):
 
-    data = request.json
+    try:
+        data = request.json
 
-    if not data:
-        return error("No data provided")
+        if not data:
 
-    mild = data.get("aqi_mild", 51)
-    moderate = data.get("aqi_moderate", 101)
-    severe = data.get("aqi_severe", 151)
+            return error("No data provided")
 
-    if not (mild < moderate < severe):
-        return error("Invalid AQI thresholds: must be mild < moderate < severe")
+        mild = data.get("aqi_mild", 51)
+        moderate = data.get("aqi_moderate", 101)
+        severe = data.get("aqi_severe", 151)
 
-    ref = db.collection("user_settings").document(user_id)
+        if not (mild < moderate < severe):
 
-    payload = {
-        **DEFAULT_SETTINGS,
-        **data
-    }
+            return error(
+                "Invalid AQI thresholds: must be mild < moderate < severe"
+            )
 
-    ref.set(payload, merge=True)
+        payload = {
+            **DEFAULT_SETTINGS,
+            **data,
+            "updatedAt": firestore.SERVER_TIMESTAMP
+        }
 
-    return success("Settings updated", payload)
+        payload["preferences"] = {
+            **DEFAULT_SETTINGS["preferences"],
+            **data.get("preferences", {}),
+        }
+
+        ref = db.collection("user_settings").document(user_id)
+
+        ref.set(payload, merge=True)
+
+        return success(
+            "Settings updated successfully.",
+        )
+
+    except Exception as e:
+        
+        return error(str(e))

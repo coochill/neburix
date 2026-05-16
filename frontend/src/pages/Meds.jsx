@@ -54,13 +54,27 @@ export default function Meds({ userId, onExport }) {
   }
 
   async function toggleMed(id) {
+  try {
+    // optimistic UI update FIRST (instant feedback)
+    setMedsList((prev) =>
+      prev.map((m) =>
+        m.id === id ? { ...m, taken: !m.taken } : m
+      )
+    );
+
+    // then backend sync
     await fetch(
       `http://localhost:5000/api/medications/${userId}/${id}/toggle`,
       { method: "PATCH" }
     );
 
+  } catch (err) {
+    console.error("Toggle failed:", err);
+
+    // rollback if failed
     fetchMeds();
   }
+}
 
   async function deleteMed(id) {
     await fetch(

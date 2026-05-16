@@ -1,42 +1,86 @@
 import { useEffect, useState } from "react";
 import Swal from "sweetalert2";
 
-export default function Settings({ user }) {
+function Settings({ user }) {
+
+  const [loading, setLoading] = useState(true);
+
+  const [message, setMessage] = useState("");
+
+  const [doctorEmail, setDoctorEmail] = useState("");
 
   const [settings, setSettings] = useState({
+    caregiverName: "",
+    caregiverEmail: "",
+
+    preferences: {
+      aqiAlerts: true,
+      medAlerts: true,
+    },
+
     aqi_mild: 51,
     aqi_moderate: 101,
     aqi_severe: 151,
   });
 
-  const [loading, setLoading] = useState(true);
-
   useEffect(() => {
 
-    async function load() {
+async function loadSettings() {
 
-      if (!user?.uid) return;
+  try {
 
-      const response = await fetch(
-        `http://localhost:5000/api/settings/${user.uid}`
-      );
+    if (!user?.uid) {
 
-      const result = await response.json();
-
-      if (result?.data) {
-
-        setSettings((prev) => ({
-          ...prev,
-          ...result.data,
-        }));
-
-      }
-
-      setLoading(false);
+      return;
 
     }
 
-    load();
+    const response = await fetch(
+      `http://127.0.0.1:5000/api/settings/${user.uid}`
+    );
+
+    const result = await response.json();
+
+    if (result.success) {
+
+      const data = result.data;
+
+      setSettings((prev) => {
+
+        const merged = {
+          ...prev,
+          ...data,
+
+          preferences: {
+            ...prev.preferences,
+            ...(data.preferences || {}),
+          },
+        };
+
+        return merged;
+
+      });
+
+    } else {
+
+    }
+
+  } catch (error) {
+
+    console.error(
+      "SETTINGS: Failed to load settings:",
+      error
+    );
+
+  } finally {
+
+    setLoading(false);
+
+  }
+
+}
+
+    loadSettings();
 
   }, [user]);
 
@@ -51,7 +95,7 @@ export default function Settings({ user }) {
 
   }
 
-  function updateField(key, value) {
+  function updateThreshold(key, value) {
 
     const number = Number(value);
 
@@ -128,12 +172,12 @@ export default function Settings({ user }) {
 
   }
 
-  async function save() {
+  async function saveSettings() {
 
-    if (!user?.uid) return;
+  try {
 
-    await fetch(
-      `http://localhost:5000/api/settings/${user.uid}`,
+    const response = await fetch(
+      `http://127.0.0.1:5000/api/settings/${user.uid}`,
       {
         method: "PATCH",
 
@@ -145,97 +189,304 @@ export default function Settings({ user }) {
       }
     );
 
+    const result = await response.json();
+
+    if (result.success) {
+
+      Swal.fire({
+        icon: "success",
+        title: "Saved",
+        text: "Settings updated successfully.",
+        confirmButtonColor: "#0f766e",
+      });
+
+      setMessage(result.message);
+
+    } else {
+
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: result.message || "Failed to save settings.",
+      });
+
+    }
+
+  } catch (error) {
+
+    console.error(
+      "SETTINGS: Save crashed:",
+      error
+    );
+
     Swal.fire({
-      icon: "success",
-      title: "Saved",
-      text: "AQI settings updated successfully.",
-      confirmButtonColor: "#0f766e",
+      icon: "error",
+      title: "Error",
+      text: "Failed to save settings.",
     });
 
   }
 
+}
+
+  async function shareReport() {
+
+    try {
+
+      const response = await fetch(
+        "http://127.0.0.1:5000/api/report/share",
+        {
+          method: "POST",
+
+          headers: {
+            "Content-Type": "application/json",
+          },
+
+          body: JSON.stringify({
+            uid: user.uid,
+            recipientEmail: doctorEmail,
+            weekLabel: "Last 7 days",
+          }),
+        }
+      );
+
+      const data = await response.json();
+
+      setMessage(data.message || "Report shared.");
+
+      Swal.fire({
+        icon: "success",
+        title: "Report Shared",
+        text: data.message,
+        confirmButtonColor: "#0f766e",
+      });
+
+    } catch (error) {
+
+      console.error(error);
+
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "Failed to share report.",
+      });
+
+    }
+
+  }
+
   if (loading) {
+
     return (
       <p className="p-4">
         Loading settings...
       </p>
     );
+
   }
 
   return (
-    <div className="p-4 space-y-6">
 
-      <h1 className="text-lg font-bold">
-        AQI Settings
-      </h1>
+    <div className="space-y-6 p-4">
 
-      <div className="space-y-2">
+      <h2 className="text-xl font-bold text-stone-900">
+        Settings
+      </h2>
 
-        <label className="text-sm font-medium">
-          Mild AQI Threshold
-        </label>
+      {/* Caregiver */}
+      <div className="rounded-2xl border border-stone-200 bg-white p-4">
+
+        <h3 className="font-semibold text-stone-800">
+          Trusted Caregiver
+        </h3>
 
         <input
-          type="number"
-          value={settings.aqi_mild}
+          type="text"
+          placeholder="Caregiver Name"
+          value={settings.caregiverName}
           onChange={(e) =>
-            updateField(
-              "aqi_mild",
-              e.target.value
-            )
+            setSettings({
+              ...settings,
+              caregiverName: e.target.value,
+            })
           }
-          className="w-full border p-2 rounded"
+          className="mt-3 w-full rounded-xl border border-stone-300 px-3 py-2"
+        />
+
+        <input
+          type="email"
+          placeholder="Caregiver Email"
+          value={settings.caregiverEmail}
+          onChange={(e) =>
+            setSettings({
+              ...settings,
+              caregiverEmail: e.target.value,
+            })
+          }
+          className="mt-3 w-full rounded-xl border border-stone-300 px-3 py-2"
         />
 
       </div>
 
-      <div className="space-y-2">
+      {/* Notification Preferences */}
+      <div className="rounded-2xl border border-stone-200 bg-white p-4">
 
-        <label className="text-sm font-medium">
-          Moderate AQI Threshold
+        <h3 className="font-semibold text-stone-800">
+          Notification Preferences
+        </h3>
+
+        <label className="mt-3 flex items-center gap-2">
+
+          <input
+            type="checkbox"
+            checked={settings.preferences.aqiAlerts}
+            onChange={() =>
+              setSettings({
+                ...settings,
+                preferences: {
+                  ...settings.preferences,
+                  aqiAlerts: !settings.preferences.aqiAlerts,
+                },
+              })
+            }
+          />
+
+          AQI Alerts
+
         </label>
 
-        <input
-          type="number"
-          value={settings.aqi_moderate}
-          onChange={(e) =>
-            updateField(
-              "aqi_moderate",
-              e.target.value
-            )
-          }
-          className="w-full border p-2 rounded"
-        />
+        <label className="mt-3 flex items-center gap-2">
+
+          <input
+            type="checkbox"
+            checked={settings.preferences.medAlerts}
+            onChange={() =>
+              setSettings({
+                ...settings,
+                preferences: {
+                  ...settings.preferences,
+                  medAlerts: !settings.preferences.medAlerts,
+                },
+              })
+            }
+          />
+
+          Medication Reminders
+
+        </label>
 
       </div>
 
-      <div className="space-y-2">
+      {/* AQI Thresholds */}
+      <div className="rounded-2xl border border-stone-200 bg-white p-4 space-y-4">
 
-        <label className="text-sm font-medium">
-          Severe AQI Threshold
-        </label>
+        <h3 className="font-semibold text-stone-800">
+          AQI Thresholds
+        </h3>
+
+        <div>
+
+          <label className="text-sm font-medium">
+            Mild AQI Threshold
+          </label>
+
+          <input
+            type="number"
+            value={settings.aqi_mild}
+            onChange={(e) =>
+              updateThreshold(
+                "aqi_mild",
+                e.target.value
+              )
+            }
+            className="mt-1 w-full rounded-xl border border-stone-300 px-3 py-2"
+          />
+
+        </div>
+
+        <div>
+
+          <label className="text-sm font-medium">
+            Moderate AQI Threshold
+          </label>
+
+          <input
+            type="number"
+            value={settings.aqi_moderate}
+            onChange={(e) =>
+              updateThreshold(
+                "aqi_moderate",
+                e.target.value
+              )
+            }
+            className="mt-1 w-full rounded-xl border border-stone-300 px-3 py-2"
+          />
+
+        </div>
+
+        <div>
+
+          <label className="text-sm font-medium">
+            Severe AQI Threshold
+          </label>
+
+          <input
+            type="number"
+            value={settings.aqi_severe}
+            onChange={(e) =>
+              updateThreshold(
+                "aqi_severe",
+                e.target.value
+              )
+            }
+            className="mt-1 w-full rounded-xl border border-stone-300 px-3 py-2"
+          />
+
+        </div>
+
+      </div>
+
+      {/* Share Report */}
+      <div className="rounded-2xl border border-stone-200 bg-white p-4">
+
+        <h3 className="font-semibold text-stone-800">
+          Share Doctor Summary
+        </h3>
 
         <input
-          type="number"
-          value={settings.aqi_severe}
-          onChange={(e) =>
-            updateField(
-              "aqi_severe",
-              e.target.value
-            )
-          }
-          className="w-full border p-2 rounded"
+          type="email"
+          placeholder="Enter Email"
+          value={doctorEmail}
+          onChange={(e) => setDoctorEmail(e.target.value)}
+          className="mt-3 w-full rounded-xl border border-stone-300 px-3 py-2"
         />
+
+        <button
+          onClick={shareReport}
+          className="mt-3 w-full rounded-xl bg-blue-600 px-4 py-2 text-white"
+        >
+          Share Weekly Report
+        </button>
 
       </div>
 
       <button
-        onClick={save}
-        className="bg-teal-600 text-white px-4 py-2 rounded"
+        onClick={saveSettings}
+        className="w-full rounded-xl bg-stone-900 px-4 py-3 text-white"
       >
-        Save
+        Save Settings
       </button>
 
+      {message && (
+        <div className="rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
+          {message}
+        </div>
+      )}
+
     </div>
+
   );
+
 }
+
+export default Settings;
