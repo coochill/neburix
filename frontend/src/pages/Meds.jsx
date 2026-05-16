@@ -54,27 +54,27 @@ export default function Meds({ userId, onExport }) {
   }
 
   async function toggleMed(id) {
-  try {
-    // optimistic UI update FIRST (instant feedback)
-    setMedsList((prev) =>
-      prev.map((m) =>
-        m.id === id ? { ...m, taken: !m.taken } : m
-      )
-    );
+    try {
+      // optimistic UI update FIRST (instant feedback)
+      setMedsList((prev) =>
+        prev.map((m) =>
+          m.id === id ? { ...m, taken: !m.taken } : m
+        )
+      );
 
-    // then backend sync
-    await fetch(
-      `http://localhost:5000/api/medications/${userId}/${id}/toggle`,
-      { method: "PATCH" }
-    );
+      // then backend sync
+      await fetch(
+        `http://localhost:5000/api/medications/${userId}/${id}/toggle`,
+        { method: "PATCH" }
+      );
 
-  } catch (err) {
-    console.error("Toggle failed:", err);
+    } catch (err) {
+      console.error("Toggle failed:", err);
 
-    // rollback if failed
-    fetchMeds();
+      // rollback if failed
+      fetchMeds();
+    }
   }
-}
 
   async function deleteMed(id) {
     await fetch(
@@ -94,7 +94,7 @@ export default function Meds({ userId, onExport }) {
   }
 
   function getTimeSlot(timeStr) {
-    if (!timeStr) return ""; 
+    if (!timeStr) return "";
 
     const hour = parseInt(timeStr.split(":")[0], 10);
     if (Number.isNaN(hour)) return "";
@@ -161,76 +161,88 @@ export default function Meds({ userId, onExport }) {
           {adherence}% adherence
         </div>
       </header>
+      
+      <div className="rounded-2xl border bg-white shadow-sm overflow-hidden divide-y divide-stone-100 px-4 pt-4">
 
-      {/* MORNING */}
-      <Card title="Morning">
-        {morningMeds.length === 0 && (
-          <p className="text-xs text-gray-500">No morning medications</p>
-        )}
+        {/* MORNING */}
+        <div className="pb-4">
+          <p className="text-sm font-bold mb-3" style={{ color: "oklch(0.62 0.11 220)" }}>Morning</p>
+          {morningMeds.length === 0 && <p className="text-xs text-gray-400">No morning medications</p>}
+          <div className="space-y-2">
+            {morningMeds.map((med) => (
+              <MedItem
+                key={med.id}
+                med={med}
+                onToggle={() => toggleMed(med.parentId)}
+                onDelete={() => deleteMed(med.parentId)}
+              />
+            ))}
+          </div>
+        </div>
 
-        {morningMeds.map((med) => (
-          <MedItem
-            key={med.id}
-            med={med}
-            onToggle={() => toggleMed(med.parentId)}
-            onDelete={() => deleteMed(med.parentId)}
-          />
-        ))}
-      </Card>
+        {/* NIGHT */}
+        <div className="py-4">
+          <p className="text-sm font-bold mb-3" style={{ color: "oklch(0.62 0.11 220)" }}>Night</p>
+          {nightMeds.length === 0 && <p className="text-xs text-gray-400">No night medications</p>}
+          <div className="space-y-2">
+            {nightMeds.map((med) => (
+              <MedItem
+                key={med.id}
+                med={med}
+                onToggle={() => toggleMed(med.parentId)}
+                onDelete={() => deleteMed(med.parentId)}
+              />
+            ))}
+          </div>
+        </div>
 
-      {/* NIGHT */}
-      <Card title="Night">
-        {nightMeds.length === 0 && (
-          <p className="text-xs text-gray-500">No night medications</p>
-        )}
+        {/* AS NEEDED */}
+        <div className="py-4">
+          <p className="text-sm font-bold mb-3" style={{ color: "oklch(0.62 0.11 220)" }}>As Needed</p>
+          {asNeededMeds.length === 0 && <p className="text-xs text-gray-400">No as-needed medications</p>}
+          <div className="space-y-2">
+            {asNeededMeds.map((med) => (
+              <MedItem
+                key={med.id}
+                med={med}
+                onToggle={() => toggleMed(med.parentId)}
+                onDelete={() => deleteMed(med.parentId)}
+              />
+            ))}
+          </div>
+        </div>
 
-        {nightMeds.map((med) => (
-          <MedItem
-            key={med.id}
-            med={med}
-            onToggle={() => toggleMed(med.parentId)}
-            onDelete={() => deleteMed(med.parentId)}
-          />
-        ))}
-      </Card>
+        {/* ADD BUTTON */}
+        <div className="py-4">
+          <button
+            onClick={() => setShowForm((p) => !p)}
+            className="w-full rounded-2xl py-3 text-sm font-medium text-white"
+            style={{
+              background: showForm
+                ? "#aaa"
+                : "linear-gradient(135deg, oklch(0.62 0.11 220), oklch(0.56 0.09 200))",
+            }}
+          >
+            {showForm ? "Cancel" : "Add medication"}
+          </button>
+        </div>
 
-      {/* AS NEEDED */}
-      <Card title="As Needed">
-        {asNeededMeds.length === 0 && (
-          <p className="text-xs text-gray-500">No as-needed medications</p>
-        )}
+      </div>
 
-        {asNeededMeds.map((med) => (
-          <MedItem
-            key={med.id}
-            med={med}
-            onToggle={() => toggleMed(med.parentId)}
-            onDelete={() => deleteMed(med.parentId)}
-          />
-        ))}
-      </Card>
-
-      {/* FORM */}
-      <button
-        onClick={() => setShowForm((p) => !p)}
-        className="w-full rounded-2xl py-3 text-sm text-white"
-        style={{
-          background: showForm
-            ? "#aaa"
-            : "linear-gradient(135deg, oklch(0.62 0.11 220), oklch(0.56 0.09 200))",
-        }}
-      >
-        {showForm ? "Cancel" : "Add medication"}
-      </button>
-
+   
       {showForm && (
-        <form onSubmit={submitMedication} className="space-y-4 rounded-2xl border bg-stone-50 p-4">
+        <form onSubmit={submitMedication} className="space-y-3 rounded-2xl border bg-white shadow-sm p-4">
 
+          <p className="text-sm font-bold" style={{ color: "oklch(0.62 0.11 220)" }}>
+            New Medication
+          </p>
+
+          {/* NAME */}
           <input
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="Medication name"
-            className="w-full rounded-xl border px-3 py-2 text-sm"
+            className="w-full rounded-xl border border-stone-200 bg-stone-50 px-3 py-2.5 text-sm placeholder:text-gray-400 focus:outline-none"
             required
           />
 
@@ -239,13 +251,13 @@ export default function Meds({ userId, onExport }) {
               value={dose}
               onChange={(e) => setDose(e.target.value)}
               placeholder="Dose"
-              className="rounded-xl border px-3 py-2 text-sm"
+              className="rounded-xl border border-stone-200 bg-stone-50 px-3 py-2.5 text-sm placeholder:text-gray-400 focus:outline-none"
             />
 
             <select
-            value={type}
-            onChange={(e) => setType(e.target.value)}
-            className="rounded-xl border px-3 py-2 text-sm"
+              value={type}
+              onChange={(e) => setType(e.target.value)}
+               className="rounded-xl border px-3 py-2 text-sm"
           >
             <option style={{ background: type === "Maintenance inhaler" ? "oklch(0.62 0.11 220)" : "white", color: type === "Maintenance inhaler" ? "white" : "#333" }}>Maintenance inhaler</option>
             <option style={{ background: type === "Rescue inhaler" ? "oklch(0.62 0.11 220)" : "white", color: type === "Rescue inhaler" ? "white" : "#333" }}>Rescue inhaler</option>
@@ -254,44 +266,39 @@ export default function Meds({ userId, onExport }) {
           </select>
           </div>
 
-          <div className="flex gap-2">
-            <button type="button" onClick={() => setScheduleType("scheduled")}
-              className="rounded-xl px-3 py-2 text-sm text-white"
-              style={{
-                background: scheduleType === "scheduled"
-                  ? "linear-gradient(135deg, oklch(0.62 0.11 220), oklch(0.56 0.09 200))"
-                  : "#e7e5e4",
-                color: scheduleType === "scheduled" ? "white" : "#333",
-              }}>
-              Scheduled
-            </button>
-
-            <button type="button" onClick={() => setScheduleType("as_needed")}
-              className="rounded-xl px-3 py-2 text-sm"
-              style={{
-                background: scheduleType === "as_needed"
-                  ? "linear-gradient(135deg, oklch(0.62 0.11 220), oklch(0.56 0.09 200))"
-                  : "#e7e5e4",
-                color: scheduleType === "as_needed" ? "white" : "#333",
-              }}>
-              As Needed
-            </button>
-          </div>
-
-          {scheduleType === "scheduled" && (
-            <div>
+          <div>
+            <p className="text-xs text-gray-400 mb-2">Schedule</p>
+            <div className="flex gap-2">
+              <button type="button" onClick={() => setScheduleType("scheduled")}
+                className="flex-1 rounded-xl py-2 text-sm font-medium transition-all"
+                style={{
+                  background: scheduleType === "scheduled"
+                    ? "linear-gradient(135deg, oklch(0.62 0.11 220), oklch(0.56 0.09 200))"
+                    : "#f5f5f4",
+                  color: scheduleType === "scheduled" ? "white" : "#555",
+                }}>
+                Scheduled
+              </button>
               <button
                 type="button"
-                onClick={() => setTimes((p) => [...p, ""])}
-                className="flex items-center gap-1.5 rounded-xl px-3 py-2 text-sm text-white"
+                onClick={() => setScheduleType("as_needed")}
+                className="flex-1 rounded-xl py-2 text-sm font-medium transition-all"
                 style={{
-                  background: "linear-gradient(135deg, oklch(0.62 0.11 220), oklch(0.56 0.09 200))",
+                  background: scheduleType === "as_needed"
+                    ? "linear-gradient(135deg, oklch(0.62 0.11 220), oklch(0.56 0.09 200))"
+                    : "#f5f5f4",
+                  color: scheduleType === "as_needed" ? "white" : "#555",
                 }}
               >
-                <span className="text-base leading-none">+</span>
-                Add time
+                As Needed
               </button>
+            </div>
+          </div>
 
+          {/* TIME PICKER */}
+          {scheduleType === "scheduled" && (
+            <div className="space-y-2">
+              <p className="text-xs text-gray-400">Times</p>
               {times.map((t, i) => (
                 <input
                   key={i}
@@ -302,16 +309,24 @@ export default function Meds({ userId, onExport }) {
                     copy[i] = e.target.value;
                     setTimes(copy);
                   }}
-                  className="w-full rounded-xl border px-3 py-2 text-sm"
+                  className="w-full rounded-xl border border-stone-200 bg-stone-50 px-3 py-2.5 text-sm focus:outline-none"
                 />
               ))}
+              <button
+                type="button"
+                onClick={() => setTimes((p) => [...p, ""])}
+                className="flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-xl"
+                style={{ color: "oklch(0.62 0.11 220)", background: "oklch(0.94 0.03 220)" }}
+              >
+                <span className="text-base leading-none">+</span> Add time
+              </button>
             </div>
           )}
 
           <button
             type="submit"
-            className="w-full rounded-xl py-2 text-white"
-            style={{ backgroundColor: PRIMARY }}
+            className="w-full rounded-xl py-2.5 text-sm font-medium text-white"
+            style={{ background: "linear-gradient(135deg, oklch(0.62 0.11 220), oklch(0.56 0.09 200))" }}
           >
             Save medication
           </button>
@@ -326,7 +341,7 @@ export default function Meds({ userId, onExport }) {
         onClick={onExport}
         className="w-full rounded-2xl py-3 text-white"
         style={{
-          background: `linear-gradient(135deg, ${PRIMARY}, oklch(0.52 0.1 200))`,
+          background: "linear-gradient(135deg, oklch(0.62 0.11 220), oklch(0.56 0.09 200))",
         }}
       >
         Download Doctor PDF Report
@@ -338,15 +353,20 @@ export default function Meds({ userId, onExport }) {
 /* ITEM */
 function MedItem({ med, onToggle, onDelete }) {
   return (
-    <div className="flex items-center justify-between rounded-xl border bg-white p-3">
-      <div>
-        <p className="font-semibold">
+    <div className="flex items-center justify-between rounded-xl border border-stone-100 bg-stone-50 p-3 gap-3">
+
+      <div className="flex-shrink-0 w-9 h-9 rounded-lg flex items-center justify-center"
+        style={{ background: "oklch(0.92 0.04 220)" }}>
+        <Pill className="h-4 w-4" style={{ color: "oklch(0.62 0.11 220)" }} />
+      </div>
+
+      <div className="flex-1 min-w-0">
+        <p className="font-semibold text-sm text-gray-800 truncate">
           {med.name} — {med.dose}
         </p>
-
-        <p className="text-xs text-gray-500 flex items-center gap-1">
+        <p className="text-xs text-gray-400 flex items-center gap-1 mt-0.5">
           <Clock className="h-3 w-3" />
-          {med.type}
+          {med.type}{med.time ? ` · ${med.time}` : ""}
         </p>
       </div>
 
@@ -364,9 +384,9 @@ function MedItem({ med, onToggle, onDelete }) {
 
         <button
           onClick={onDelete}
-          className="rounded-full px-3 py-1 text-xs text-red-600 hover:bg-red-50"
+          className="rounded-full p-1.5 text-red-400 hover:bg-red-50 transition-all"
         >
-          <Trash2 className="h-3 w-3" />
+          <Trash2 className="h-3.5 w-3.5" />
         </button>
       </div>
     </div>
