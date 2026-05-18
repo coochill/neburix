@@ -12,6 +12,7 @@ import { useMemo } from "react";
 import { Line } from "react-chartjs-2";
 import Air from "./Air";
 import Card from "../components/Card";
+import { TrendingUp } from "lucide-react";
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Filler, Tooltip, Legend);
 
@@ -124,20 +125,36 @@ export default function Trends({ logs, triggerInsight, city, aqi, loading, error
   return (
     <div className="space-y-4">
       {/* Header */}
-      <header
-        className="relative overflow-hidden rounded-2xl p-5 text-white shadow-lg"
-        style={{
-          background:
-            "linear-gradient(135deg, oklch(0.62 0.11 220), oklch(0.56 0.09 200))",
-        }}
-      >
-        <div className="absolute -right-10 -top-10 h-32 w-32 rounded-full bg-white/10 blur-3xl" />
+<header
+  className="relative overflow-hidden rounded-2xl p-6 text-white shadow-lg"
+  style={{
+    background:
+      "linear-gradient(135deg, oklch(0.62 0.11 220), oklch(0.56 0.09 200))",
+  }}
+>
+  {/* Background glow */}
+  <div className="absolute -right-10 -top-10 h-32 w-32 rounded-full bg-white/10 blur-3xl" />
 
-        <h2 className="text-2xl font-semibold">Trends</h2>
-        <p className="text-sm text-white/80">
-          Your weekly symptom pattern and air quality insights
-        </p>
-      </header>
+  <div className="relative flex items-center justify-between">
+
+    {/* LEFT CONTENT */}
+    <div>
+      <h2 className="text-2xl font-semibold">
+        Trends
+      </h2>
+
+      <p className="text-sm text-white/80">
+        Your weekly symptom pattern and air quality insights
+      </p>
+    </div>
+
+    {/* TREND ICON */}
+    <div className="rounded-xl bg-white/15 p-2.5 backdrop-blur">
+      <TrendingUp className="h-5 w-5 text-white" />
+    </div>
+
+  </div>
+</header>
 
       {/* Air quality */}
       <Card title="Air quality">

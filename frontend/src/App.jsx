@@ -357,24 +357,29 @@ function App() {
           {/* RIGHT: Profile Dropdown */}
           <div className="relative" ref={dropdownRef}>
             <button
-              onClick={() => setOpen((prev) => !prev)}
-              className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full border border-stone-300 bg-stone-100"
-            >
-              {user.photoURL ? (
-                <img
-                  src={user.photoURL}
-                  alt="avatar"
-                  className="h-full w-full object-cover"
-                />
-              ) : (
-                <span className="text-sm font-semibold text-stone-700">
-                  {(profileName || user.displayName || user.email || "U")
-                    .charAt(0)
-                    .toUpperCase()}
-                </span>
-              )}
-            </button>
-
+  onClick={() => setOpen((prev) => !prev)}
+  className="
+    flex h-10 w-10 items-center justify-center overflow-hidden
+    rounded-full border border-blue-300
+    bg-blue-100
+    transition-all duration-200
+    hover:bg-blue-200 hover:shadow-md hover:shadow-blue-300/40
+  "
+>
+  {user.photoURL ? (
+    <img
+      src={user.photoURL}
+      alt="avatar"
+      className="h-full w-full object-cover"
+    />
+  ) : (
+    <span className="text-sm font-semibold text-blue-700">
+      {(profileName || user.displayName || user.email || "U")
+        .charAt(0)
+        .toUpperCase()}
+    </span>
+  )}
+</button>
             {/* Dropdown */}
             {open && (
               <div className="absolute right-0 mt-2 w-56 rounded-2xl border border-stone-200 bg-white p-2 shadow-xl">
@@ -393,14 +398,14 @@ function App() {
                     setTab("settings");
                   closeDropdown();
                 }}
-                                className="mt-2 w-full rounded-lg px-3 py-2 text-left text-sm text-stone-700 hover:bg-stone-100"
+                                className="mt-2 w-full rounded-lg px-3 py-2 text-left text-sm text-stone-700 hover:bg-blue-200 hover:shadow-md hover:shadow-blue-300/40"
                               >
                                 Settings
                               </button>
 
                 <button
   onClick={closeDropdown}
-  className="w-full rounded-lg px-3 py-2 text-left text-sm text-stone-700 hover:bg-stone-100"
+  className="w-full rounded-lg px-3 py-2 text-left text-sm text-stone-700 hover:bg-blue-200 hover:shadow-md hover:shadow-blue-300/40"
 >
   Profile
 </button>
@@ -412,7 +417,7 @@ function App() {
     logout();
     closeDropdown();
   }}
-  className="w-full rounded-lg px-3 py-2 text-left text-sm font-medium text-red-600 hover:bg-red-50"
+  className="w-full rounded-lg px-3 py-2 text-left text-sm font-medium text-red-600 hover:bg-blue-200 hover:shadow-md hover:shadow-blue-300/40"
 >
   Sign out
 </button>

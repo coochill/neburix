@@ -53,7 +53,7 @@ export default function QuickLog({ mood, symptomIds, onMood, onSymptomToggle, on
 
       <button
         onClick={onSubmit}
-        className="mt-5 w-full rounded-2xl py-3 text-sm font-semibold text-white shadow-lg transition-all duration-300"
+        className="mt-5 w-full rounded-2xl py-3 text-sm font-semibold text-white shadow-lg transition-all duration-300 hover:shadow-xl hover:scale-[1.02] active:scale-[0.98]"
         style={{ background: "linear-gradient(135deg, oklch(0.62 0.11 220), oklch(0.56 0.09 200))" }}
       >
         Log now

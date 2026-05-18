@@ -64,19 +64,13 @@ export default function HealthLog({ logs, logError }) {
           </div>
         </div>
 
-        <div
-          className="rounded-2xl border p-1"
-          style={{
-            borderColor: "oklch(0.85 0.03 220)",
-            backgroundColor: "oklch(0.98 0.01 220)",
-          }}
-        >
+        
           <Log
             logs={logs}
             error={logError}
             showHeader={false}
           />
-        </div>
+        
       </section>
     </div>
   );

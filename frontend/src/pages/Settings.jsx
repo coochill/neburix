@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import Swal from "sweetalert2";
+import { Settings as SettingsIcon, UserCheck, Bell,Gauge, FileText} from "lucide-react";
 
 function Settings({ user }) {
 
@@ -25,60 +26,60 @@ function Settings({ user }) {
 
   useEffect(() => {
 
-async function loadSettings() {
+    async function loadSettings() {
 
-  try {
+      try {
 
-    if (!user?.uid) {
+        if (!user?.uid) {
 
-      return;
+          return;
+
+        }
+
+        const response = await fetch(
+          `http://127.0.0.1:5000/api/settings/${user.uid}`
+        );
+
+        const result = await response.json();
+
+        if (result.success) {
+
+          const data = result.data;
+
+          setSettings((prev) => {
+
+            const merged = {
+              ...prev,
+              ...data,
+
+              preferences: {
+                ...prev.preferences,
+                ...(data.preferences || {}),
+              },
+            };
+
+            return merged;
+
+          });
+
+        } else {
+
+        }
+
+      } catch (error) {
+
+        console.error(
+          "SETTINGS: Failed to load settings:",
+          error
+        );
+
+      } finally {
+
+        setLoading(false);
+
+      }
 
     }
-
-    const response = await fetch(
-      `http://127.0.0.1:5000/api/settings/${user.uid}`
-    );
-
-    const result = await response.json();
-
-    if (result.success) {
-
-      const data = result.data;
-
-      setSettings((prev) => {
-
-        const merged = {
-          ...prev,
-          ...data,
-
-          preferences: {
-            ...prev.preferences,
-            ...(data.preferences || {}),
-          },
-        };
-
-        return merged;
-
-      });
-
-    } else {
-
-    }
-
-  } catch (error) {
-
-    console.error(
-      "SETTINGS: Failed to load settings:",
-      error
-    );
-
-  } finally {
-
-    setLoading(false);
-
-  }
-
-}
 
     loadSettings();
 
@@ -90,6 +91,7 @@ async function loadSettings() {
       icon: "warning",
       title: "Invalid Threshold",
       text: message,
+      width: 320,
       confirmButtonColor: "#0f766e",
     });
 
@@ -174,60 +176,63 @@ async function loadSettings() {
 
   async function saveSettings() {
 
-  try {
+    try {
 
-    const response = await fetch(
-      `http://127.0.0.1:5000/api/settings/${user.uid}`,
-      {
-        method: "PATCH",
+      const response = await fetch(
+        `http://127.0.0.1:5000/api/settings/${user.uid}`,
+        {
+          method: "PATCH",
 
-        headers: {
-          "Content-Type": "application/json",
-        },
+          headers: {
+            "Content-Type": "application/json",
+          },
 
-        body: JSON.stringify(settings),
+          body: JSON.stringify(settings),
+        }
+      );
+
+      const result = await response.json();
+
+      if (result.success) {
+
+        Swal.fire({
+          icon: "success",
+          title: "Saved",
+          width: 320,
+          text: "Settings updated successfully.",
+          confirmButtonColor: "#0f766e",
+        });
+
+        setMessage(result.message);
+
+      } else {
+
+        Swal.fire({
+          icon: "error",
+          title: "Error",
+          width: 320,
+          text: result.message || "Failed to save settings.",
+        });
+
       }
-    );
 
-    const result = await response.json();
+    } catch (error) {
 
-    if (result.success) {
-
-      Swal.fire({
-        icon: "success",
-        title: "Saved",
-        text: "Settings updated successfully.",
-        confirmButtonColor: "#0f766e",
-      });
-
-      setMessage(result.message);
-
-    } else {
+      console.error(
+        "SETTINGS: Save crashed:",
+        error
+      );
 
       Swal.fire({
         icon: "error",
         title: "Error",
-        text: result.message || "Failed to save settings.",
+        width: 320,
+        text: "Failed to save settings.",
       });
 
     }
 
-  } catch (error) {
-
-    console.error(
-      "SETTINGS: Save crashed:",
-      error
-    );
-
-    Swal.fire({
-      icon: "error",
-      title: "Error",
-      text: "Failed to save settings.",
-    });
-
   }
-
-}
 
   async function shareReport() {
 
@@ -257,6 +262,7 @@ async function loadSettings() {
       Swal.fire({
         icon: "success",
         title: "Report Shared",
+        width: 320,
         text: data.message,
         confirmButtonColor: "#0f766e",
       });
@@ -268,6 +274,7 @@ async function loadSettings() {
       Swal.fire({
         icon: "error",
         title: "Error",
+        width: 320,
         text: "Failed to share report.",
       });
 
@@ -286,19 +293,76 @@ async function loadSettings() {
   }
 
   return (
+    <div className="space-y-4">
+      {/* Header */}
+      <header
+        className="relative overflow-hidden rounded-2xl p-4 text-white shadow-md"
+        style={{
+          background:
+            "linear-gradient(135deg, oklch(0.62 0.11 220), oklch(0.56 0.09 200))",
+        }}
+      >
+        <div className="absolute -right-8 -top-8 h-24 w-24 rounded-full bg-white/10 blur-2xl" />
 
-    <div className="space-y-6 p-4">
+        <div className="relative flex items-center justify-between">
+          <div>
+            <p className="text-[10px] uppercase tracking-[0.18em] text-white/70">
+              System Preferences
+            </p>
 
-      <h2 className="text-xl font-bold text-stone-900">
-        Settings
-      </h2>
+            <h2 className="mt-1 text-2xl font-semibold tracking-tight">
+              Settings
+            </h2>
+
+            <p className="mt-1 text-xs text-white/80">
+              Manage alerts and AQI thresholds
+            </p>
+          </div>
+
+          {/* icon */}
+          <div className="rounded-xl bg-white/15 p-2.5 backdrop-blur">
+            <SettingsIcon className="h-5 w-5 text-white" />
+          </div>
+        </div>
+      </header>
 
       {/* Caregiver */}
-      <div className="rounded-2xl border border-stone-200 bg-white p-4">
+      <section
+        className="rounded-2xl border p-4 space-y-3"
+        style={{
+          borderColor: "oklch(0.85 0.03 220)",
+          backgroundColor: "oklch(0.98 0.01 220)",
+        }}
+      >
 
-        <h3 className="font-semibold text-stone-800">
-          Trusted Caregiver
-        </h3>
+        {/* Header */}
+<div className="flex items-start gap-0">
+
+  {/* Icon */}
+  <div className="flex items-center justify-center w-8 h-8">
+    <UserCheck
+      className="h-5 w-5"
+      style={{ color: "oklch(0.56 0.09 200)" }}
+    />
+  </div>
+
+
+
+          {/* Text */}
+          <div>
+            <p
+              className="text-base font-semibold"
+              style={{ color: "oklch(0.56 0.09 200)" }}
+            >
+              Trusted Caregiver
+            </p>
+
+            <p className="text-[11px] text-stone-500">
+              Person who receives alerts and reports
+            </p>
+          </div>
+
+        </div>
 
         <input
           type="text"
@@ -326,16 +390,37 @@ async function loadSettings() {
           className="mt-3 w-full rounded-xl border border-stone-300 px-3 py-2"
         />
 
-      </div>
+      </section>
 
       {/* Notification Preferences */}
-      <div className="rounded-2xl border border-stone-200 bg-white p-4">
+      <section
+        className="rounded-2xl border p-4 space-y-3"
+        style={{
+          borderColor: "oklch(0.85 0.03 220)",
+          backgroundColor: "oklch(0.98 0.01 220)",
+        }}
+      >
+ <div className="flex items-start gap-0">
 
-        <h3 className="font-semibold text-stone-800">
-          Notification Preferences
-        </h3>
+  {/* Icon */}
+  <div className="flex items-center justify-center w-8 h-8">
+            <Bell
+              className="h-5 w-5"
+              style={{ color: "oklch(0.56 0.09 200)" }}
+            />
+          </div>
 
-        <label className="mt-3 flex items-center gap-2">
+          {/* Text */}
+          <div>
+          <p className="text-base font-semibold" style={{ color: "oklch(0.56 0.09 200)" }}>
+            Notifications
+          </p>
+          <p className="text-[11px] text-stone-500">
+            Control alerts and reminders
+          </p>
+        </div>
+        </div>
+        <label className="mt-3 flex items-center gap-2 cursor-pointer">
 
           <input
             type="checkbox"
@@ -349,13 +434,14 @@ async function loadSettings() {
                 },
               })
             }
+             className="h-4 w-4 accent-blue-600 transition-all duration-200 hover:scale-110 hover:shadow-md"
           />
 
           AQI Alerts
 
         </label>
 
-        <label className="mt-3 flex items-center gap-2">
+        <label className="mt-3 flex items-center gap-2 cursor-pointer">
 
           <input
             type="checkbox"
@@ -369,27 +455,43 @@ async function loadSettings() {
                 },
               })
             }
+             className="h-4 w-4 accent-blue-600 transition-all duration-200 hover:scale-110 hover:shadow-md"
           />
 
           Medication Reminders
 
         </label>
 
-      </div>
+      </section>
 
       {/* AQI Thresholds */}
-      <div className="rounded-2xl border border-stone-200 bg-white p-4 space-y-4">
+      <section
+        className="rounded-2xl border p-4 space-y-4"
+        style={{
+          borderColor: "oklch(0.85 0.03 220)",
+          backgroundColor: "oklch(0.98 0.01 220)",
+        }}
+      >
+<div className="flex items-start gap-0">
 
-        <h3 className="font-semibold text-stone-800">
-          AQI Thresholds
-        </h3>
+  {/* Icon */}
+  <div className="flex items-center justify-center w-8 h-8">
+            <Gauge
+              className="h-5 w-5"
+              style={{ color: "oklch(0.56 0.09 200)" }}
+            />
+          </div>
 
-        <div>
-
-          <label className="text-sm font-medium">
-            Mild AQI Threshold
-          </label>
-
+          {/* Text */}
+          <div>
+          <p className="text-base font-semibold" style={{ color: "oklch(0.56 0.09 200)" }}>
+            AQI Thresholds
+          </p>
+          <p className="text-[11px] text-stone-500">
+            Set air quality alert sensitivity levels
+          </p>
+</div>
+</div>
           <input
             type="number"
             value={settings.aqi_mild}
@@ -402,7 +504,7 @@ async function loadSettings() {
             className="mt-1 w-full rounded-xl border border-stone-300 px-3 py-2"
           />
 
-        </div>
+       
 
         <div>
 
@@ -444,38 +546,65 @@ async function loadSettings() {
 
         </div>
 
-      </div>
+      </section>
 
       {/* Share Report */}
-      <div className="rounded-2xl border border-stone-200 bg-white p-4">
+      <section
+        className="rounded-2xl border p-4 space-y-3"
+        style={{
+          borderColor: "oklch(0.85 0.03 220)",
+          backgroundColor: "oklch(0.98 0.01 220)",
+        }}
+      >
+        {/* Header */}
+<div className="flex items-start gap-0">
 
-        <h3 className="font-semibold text-stone-800">
-          Share Doctor Summary
-        </h3>
+  {/* Icon */}
+  <div className="flex items-center justify-center w-8 h-8">
+    <FileText
+      className="h-5 w-5"
+      style={{ color: "oklch(0.56 0.09 200)" }}
+    />
+  </div>
 
-        <input
-          type="email"
-          placeholder="Enter Email"
-          value={doctorEmail}
-          onChange={(e) => setDoctorEmail(e.target.value)}
-          className="mt-3 w-full rounded-xl border border-stone-300 px-3 py-2"
-        />
 
-        <button
-          onClick={shareReport}
-          className="mt-3 w-full rounded-xl bg-blue-600 px-4 py-2 text-white"
-        >
-          Share Weekly Report
-        </button>
 
-      </div>
+          {/* Text */}
+          <div>
+          <p className="text-base font-semibold" style={{ color: "oklch(0.56 0.09 200)" }}>
+            Share Report
+          </p>
+          <p className="text-[11px] text-stone-500">
+            Send weekly health summary to doctor
+          </p>
+</div>
+</div>
+          <input
+            type="email"
+            placeholder="Enter Email"
+            value={doctorEmail}
+            onChange={(e) => setDoctorEmail(e.target.value)}
+            className="mt-3 w-full rounded-xl border border-stone-300 px-3 py-2"
+          />
+
+ <button
+  onClick={shareReport}
+  className="mt-3 w-full rounded-xl bg-blue-600 px-4 py-2 text-white shadow-md transition-all duration-300 hover:shadow-xl hover:bg-blue-700 hover:scale-[1.02] active:scale-[0.98]"
+>
+  Share Weekly Report
+</button>
+      </section>
 
       <button
-        onClick={saveSettings}
-        className="w-full rounded-xl bg-stone-900 px-4 py-3 text-white"
-      >
-        Save Settings
-      </button>
+  onClick={saveSettings}
+  className="mt-5 w-[95%] block mx-auto rounded-2xl py-3 text-sm font-semibold text-white shadow-lg transition-all duration-300 hover:shadow-xl hover:scale-[1.02] active:scale-[0.98]"
+  style={{
+    background:
+      "linear-gradient(135deg, oklch(0.62 0.11 220), oklch(0.56 0.09 200))",
+  }}
+>
+  Save Settings
+</button>
 
       {message && (
         <div className="rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">

@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo } from "react";
 import Card from "../components/Card";
-import { Check, Pill, Clock, Trash2 } from "lucide-react";
+import { Check, Pill, Clock, Trash2, Sun, Moon, AlertTriangle, Plus} from "lucide-react";
 
 const PRIMARY = "oklch(0.6 0.118 184.704)";
 
@@ -144,29 +144,93 @@ export default function Meds({ userId, onExport }) {
   const adherence = medsList.length
     ? Math.round((taken / medsList.length) * 100)
     : 0;
+function MedItem({ med, onToggle, onDelete }) {
+  return (
+    <div className="flex items-center justify-between rounded-xl border p-2 bg-white/60 backdrop-blur">
 
+      {/* Left side (med info) */}
+      <div className="text-sm">
+        {med.name}
+      </div>
+
+      {/* Actions */}
+      <div className="flex items-center gap-2">
+
+        {/* CHECK BUTTON */}
+        <button
+          onClick={onToggle}
+          className="p-1 rounded-lg transition-all duration-200 hover:shadow-md hover:scale-110 active:scale-95"
+        >
+          <Check className="h-4 w-4 text-green-600" />
+        </button>
+
+        {/* DELETE BUTTON */}
+        <button
+          onClick={onDelete}
+          className="p-1 rounded-lg text-red-500 transition-all duration-200 hover:shadow-md hover:scale-110 active:scale-95"
+        >
+          <Trash2 className="h-4 w-4" />
+        </button>
+
+      </div>
+    </div>
+  );
+}
   return (
     <div className="space-y-5">
 
-      <header className="rounded-2xl p-4 text-white shadow-md"
-        style={{
-          background:
-            "linear-gradient(135deg, oklch(0.62 0.11 215), oklch(0.56 0.09 205))",
-        }}
-      >
-        <h2 className="text-2xl font-semibold">Medications</h2>
+ <header
+  className="relative overflow-hidden rounded-2xl p-5 text-white shadow-md"
+  style={{
+    background:
+      "linear-gradient(135deg, oklch(0.62 0.11 215), oklch(0.56 0.09 205))",
+  }}
+>
+  {/* Background glow */}
+  <div className="absolute -right-8 -top-8 h-24 w-24 rounded-full bg-white/10 blur-2xl" />
 
-        <div className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-white/15 px-2.5 py-1 text-[11px]">
-          <Pill className="h-3 w-3" />
-          {adherence}% adherence
-        </div>
-      </header>
+  <div className="relative flex items-center justify-between">
+
+    {/* LEFT CONTENT */}
+    <div>
+      <h2 className="text-2xl font-semibold">
+        Medications
+      </h2>
+
+      <div className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-white/15 px-2.5 py-1 text-[11px]">
+        <Pill className="h-3 w-3" />
+        {adherence}% adherence
+      </div>
+    </div>
+
+    {/* MEDS ICON */}
+    <div className="rounded-xl bg-white/15 p-2.5 backdrop-blur">
+      <Pill className="h-5 w-5 text-white" />
+    </div>
+
+  </div>
+</header>
+      
       
       <div className="rounded-2xl border bg-white shadow-sm overflow-hidden divide-y divide-stone-100 px-4 pt-4">
 
         {/* MORNING */}
         <div className="pb-4">
-          <p className="text-sm font-bold mb-3" style={{ color: "oklch(0.62 0.11 220)" }}>Morning</p>
+          <p className="text-sm font-bold mb-3" style={{ color: "oklch(0.62 0.11 220)" }}>
+            <div className="flex items-start gap-1">
+
+  {/* Icon */}
+  <div className="flex items-center justify-center w-5 h-5">
+            <Sun
+              className="h-5 w-5"
+              style={{ color: "oklch(0.56 0.09 200)" }}
+            />
+          </div>
+          <div>
+          <p>Morning</p>
+          </div>
+          </div>
+          </p>
           {morningMeds.length === 0 && <p className="text-xs text-gray-400">No morning medications</p>}
           <div className="space-y-2">
             {morningMeds.map((med) => (
@@ -182,7 +246,20 @@ export default function Meds({ userId, onExport }) {
 
         {/* NIGHT */}
         <div className="py-4">
-          <p className="text-sm font-bold mb-3" style={{ color: "oklch(0.62 0.11 220)" }}>Night</p>
+          <p className="text-sm font-bold mb-3" style={{ color: "oklch(0.62 0.11 220)" }}>           <div className="flex items-start gap-1">
+
+  {/* Icon */}
+  <div className="flex items-center justify-center w-5 h-5">
+            <Moon
+              className="h-5 w-5"
+              style={{ color: "oklch(0.56 0.09 200)" }}
+            />
+          </div>
+          <div>
+          <p>Night</p>
+          </div>
+          </div>
+          </p>
           {nightMeds.length === 0 && <p className="text-xs text-gray-400">No night medications</p>}
           <div className="space-y-2">
             {nightMeds.map((med) => (
@@ -198,7 +275,21 @@ export default function Meds({ userId, onExport }) {
 
         {/* AS NEEDED */}
         <div className="py-4">
-          <p className="text-sm font-bold mb-3" style={{ color: "oklch(0.62 0.11 220)" }}>As Needed</p>
+          <p className="text-sm font-bold mb-3" style={{ color: "oklch(0.62 0.11 220)" }}>        
+               <div className="flex items-start gap-1">
+
+  {/* Icon */}
+  <div className="flex items-center justify-center w-5 h-5">
+            <AlertTriangle
+              className="h-5 w-5"
+              style={{ color: "oklch(0.56 0.09 200)" }}
+            />
+          </div>
+          <div>
+          <p>As Needed</p>
+          </div>
+          </div>
+          </p>
           {asNeededMeds.length === 0 && <p className="text-xs text-gray-400">No as-needed medications</p>}
           <div className="space-y-2">
             {asNeededMeds.map((med) => (
@@ -215,16 +306,14 @@ export default function Meds({ userId, onExport }) {
         {/* ADD BUTTON */}
         <div className="py-4">
           <button
-            onClick={() => setShowForm((p) => !p)}
-            className="w-full rounded-2xl py-3 text-sm font-medium text-white"
-            style={{
-              background: showForm
-                ? "#aaa"
-                : "linear-gradient(135deg, oklch(0.62 0.11 220), oklch(0.56 0.09 200))",
-            }}
-          >
-            {showForm ? "Cancel" : "Add medication"}
-          </button>
+  onClick={() => setShowForm((p) => !p)}
+  className="mt-3 w-full rounded-xl px-4 py-2 text-white shadow-md transition-all duration-300 hover:shadow-xl hover:scale-[1.02] active:scale-[0.98]"
+  style={{
+    background: showForm ? "#9ca3af" : "#2563eb", // gray when open, blue when closed
+  }}
+>
+  {showForm ? "Cancel" : "Add medication"}
+</button>
         </div>
 
       </div>
@@ -233,10 +322,21 @@ export default function Meds({ userId, onExport }) {
       {showForm && (
         <form onSubmit={submitMedication} className="space-y-3 rounded-2xl border bg-white shadow-sm p-4">
 
-          <p className="text-sm font-bold" style={{ color: "oklch(0.62 0.11 220)" }}>
+                        <div className="flex items-start gap-1">
+
+  {/* Icon */}
+  <div className="flex items-center justify-center w-5 h-5">
+            <Plus
+              className="h-5 w-5"
+              style={{ color: "oklch(0.56 0.09 200)" }}
+            />
+          </div>
+          <div>
+         <p className="text-sm font-bold" style={{ color: "oklch(0.62 0.11 220)" }}>
             New Medication
           </p>
-
+</div>
+</div>
           {/* NAME */}
           <input
             value={name}
@@ -270,7 +370,7 @@ export default function Meds({ userId, onExport }) {
             <p className="text-xs text-gray-400 mb-2">Schedule</p>
             <div className="flex gap-2">
               <button type="button" onClick={() => setScheduleType("scheduled")}
-                className="flex-1 rounded-xl py-2 text-sm font-medium transition-all"
+                className="flex-1 rounded-xl py-2 text-sm font-medium transition-all duration-300 hover:shadow-md hover:scale-[1.02] active:scale-[0.98]"
                 style={{
                   background: scheduleType === "scheduled"
                     ? "linear-gradient(135deg, oklch(0.62 0.11 220), oklch(0.56 0.09 200))"
@@ -282,7 +382,7 @@ export default function Meds({ userId, onExport }) {
               <button
                 type="button"
                 onClick={() => setScheduleType("as_needed")}
-                className="flex-1 rounded-xl py-2 text-sm font-medium transition-all"
+                className="flex-1 rounded-xl py-2 text-sm font-medium transition-all duration-300 hover:shadow-md hover:scale-[1.02] active:scale-[0.98]"
                 style={{
                   background: scheduleType === "as_needed"
                     ? "linear-gradient(135deg, oklch(0.62 0.11 220), oklch(0.56 0.09 200))"
@@ -315,8 +415,8 @@ export default function Meds({ userId, onExport }) {
               <button
                 type="button"
                 onClick={() => setTimes((p) => [...p, ""])}
-                className="flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-xl"
-                style={{ color: "oklch(0.62 0.11 220)", background: "oklch(0.94 0.03 220)" }}
+                 className="flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-xl transition-all duration-300 hover:shadow-md hover:scale-[1.03] active:scale-[0.97]"
+  style={{ color: "oklch(0.62 0.11 220)", background: "oklch(0.94 0.03 220)" }}
               >
                 <span className="text-base leading-none">+</span> Add time
               </button>
@@ -325,9 +425,9 @@ export default function Meds({ userId, onExport }) {
 
           <button
             type="submit"
-            className="w-full rounded-xl py-2.5 text-sm font-medium text-white"
-            style={{ background: "linear-gradient(135deg, oklch(0.62 0.11 220), oklch(0.56 0.09 200))" }}
-          >
+            className="mt-5 w-full rounded-2xl py-3 text-sm font-semibold text-white shadow-lg transition-all duration-300 hover:shadow-xl hover:scale-[1.02] active:scale-[0.98]"
+        style={{ background: "linear-gradient(135deg, oklch(0.62 0.11 220), oklch(0.56 0.09 200))" }}
+      >
             Save medication
           </button>
         </form>
@@ -339,11 +439,12 @@ export default function Meds({ userId, onExport }) {
 
       <button
         onClick={onExport}
-        className="w-full rounded-2xl py-3 text-white"
-        style={{
-          background: "linear-gradient(135deg, oklch(0.62 0.11 220), oklch(0.56 0.09 200))",
-        }}
-      >
+       className="mt-5 w-[95%] block mx-auto rounded-2xl py-3 text-sm font-semibold text-white shadow-lg transition-all duration-300 hover:shadow-xl hover:scale-[1.02] active:scale-[0.98]"
+  style={{
+    background:
+      "linear-gradient(135deg, oklch(0.62 0.11 220), oklch(0.56 0.09 200))",
+  }}
+>
         Download Doctor PDF Report
       </button>
     </div>
