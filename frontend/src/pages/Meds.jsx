@@ -1,5 +1,6 @@
 import { useEffect, useState, useMemo } from "react";
 import Card from "../components/Card";
+import HospitalMap from "../components/HospitalMap";
 import { Check, Pill, Clock, Trash2, Sun, Moon, AlertTriangle, Plus} from "lucide-react";
 
 const PRIMARY = "oklch(0.6 0.118 184.704)";
@@ -7,6 +8,7 @@ const PRIMARY = "oklch(0.6 0.118 184.704)";
 export default function Meds({ userId, onExport }) {
   const [medsList, setMedsList] = useState([]);
   const [showForm, setShowForm] = useState(false);
+  const [showMap, setShowMap] = useState(false);
 
   const [scheduleType, setScheduleType] = useState("");
 
@@ -203,7 +205,11 @@ function MedItem({ med, onToggle, onDelete }) {
       </div>
     </div>
 
-    {/* MEDS ICON */}
+    <div className="ml-3">
+      <button onClick={() => setShowMap((s) => !s)} className="rounded px-3 py-1 text-sm bg-white/10">{showMap ? 'Hide hospitals' : 'Find hospitals'}</button>
+    </div>
+
+        {/* MEDS ICON */}
     <div className="rounded-xl bg-white/15 p-2.5 backdrop-blur">
       <Pill className="h-5 w-5 text-white" />
     </div>
@@ -216,21 +222,12 @@ function MedItem({ med, onToggle, onDelete }) {
 
         {/* MORNING */}
         <div className="pb-4">
-          <p className="text-sm font-bold mb-3" style={{ color: "oklch(0.62 0.11 220)" }}>
-            <div className="flex items-start gap-1">
-
-  {/* Icon */}
-  <div className="flex items-center justify-center w-5 h-5">
-            <Sun
-              className="h-5 w-5"
-              style={{ color: "oklch(0.56 0.09 200)" }}
-            />
+          <div className="mb-3 flex items-start gap-1 text-sm font-bold" style={{ color: "oklch(0.62 0.11 220)" }}>
+            <div className="flex h-5 w-5 items-center justify-center">
+              <Sun className="h-5 w-5" style={{ color: "oklch(0.56 0.09 200)" }} />
+            </div>
+            <div>Morning</div>
           </div>
-          <div>
-          <p>Morning</p>
-          </div>
-          </div>
-          </p>
           {morningMeds.length === 0 && <p className="text-xs text-gray-400">No morning medications</p>}
           <div className="space-y-2">
             {morningMeds.map((med) => (
@@ -246,20 +243,12 @@ function MedItem({ med, onToggle, onDelete }) {
 
         {/* NIGHT */}
         <div className="py-4">
-          <p className="text-sm font-bold mb-3" style={{ color: "oklch(0.62 0.11 220)" }}>           <div className="flex items-start gap-1">
-
-  {/* Icon */}
-  <div className="flex items-center justify-center w-5 h-5">
-            <Moon
-              className="h-5 w-5"
-              style={{ color: "oklch(0.56 0.09 200)" }}
-            />
+          <div className="mb-3 flex items-start gap-1 text-sm font-bold" style={{ color: "oklch(0.62 0.11 220)" }}>
+            <div className="flex h-5 w-5 items-center justify-center">
+              <Moon className="h-5 w-5" style={{ color: "oklch(0.56 0.09 200)" }} />
+            </div>
+            <div>Night</div>
           </div>
-          <div>
-          <p>Night</p>
-          </div>
-          </div>
-          </p>
           {nightMeds.length === 0 && <p className="text-xs text-gray-400">No night medications</p>}
           <div className="space-y-2">
             {nightMeds.map((med) => (
@@ -275,21 +264,12 @@ function MedItem({ med, onToggle, onDelete }) {
 
         {/* AS NEEDED */}
         <div className="py-4">
-          <p className="text-sm font-bold mb-3" style={{ color: "oklch(0.62 0.11 220)" }}>        
-               <div className="flex items-start gap-1">
-
-  {/* Icon */}
-  <div className="flex items-center justify-center w-5 h-5">
-            <AlertTriangle
-              className="h-5 w-5"
-              style={{ color: "oklch(0.56 0.09 200)" }}
-            />
+          <div className="mb-3 flex items-start gap-1 text-sm font-bold" style={{ color: "oklch(0.62 0.11 220)" }}>
+            <div className="flex h-5 w-5 items-center justify-center">
+              <AlertTriangle className="h-5 w-5" style={{ color: "oklch(0.56 0.09 200)" }} />
+            </div>
+            <div>As Needed</div>
           </div>
-          <div>
-          <p>As Needed</p>
-          </div>
-          </div>
-          </p>
           {asNeededMeds.length === 0 && <p className="text-xs text-gray-400">No as-needed medications</p>}
           <div className="space-y-2">
             {asNeededMeds.map((med) => (
@@ -332,9 +312,9 @@ function MedItem({ med, onToggle, onDelete }) {
             />
           </div>
           <div>
-         <p className="text-sm font-bold" style={{ color: "oklch(0.62 0.11 220)" }}>
+         <div className="text-sm font-bold" style={{ color: "oklch(0.62 0.11 220)" }}>
             New Medication
-          </p>
+          </div>
 </div>
 </div>
           {/* NAME */}
@@ -447,6 +427,11 @@ function MedItem({ med, onToggle, onDelete }) {
 >
         Download Doctor PDF Report
       </button>
+      {showMap && (
+        <div className="mt-4">
+          <HospitalMap />
+        </div>
+      )}
     </div>
   );
 }

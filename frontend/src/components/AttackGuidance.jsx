@@ -1,5 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import "./AttackGuidance.css";
+import { t } from "../lib/i18n";
+import HospitalMap from "./HospitalMap";
 
 function AttackGuidance({ user }) {
   const [guide, setGuide] = useState([]);
@@ -69,9 +71,17 @@ function AttackGuidance({ user }) {
     }
   }
 
+  const emergencyRef = useRef(null);
+  const [showMap, setShowMap] = useState(false);
+
+  useEffect(() => {
+    if (emergency && emergencyRef.current) {
+      emergencyRef.current.focus();
+    }
+  }, [emergency]);
+
   return (
-    
-      <div className="ag-card">
+      <div className="ag-card" role="region" aria-labelledby="ag-title">
         {/* Icon */}
         <div className="ag-icon-wrap">
           <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
@@ -82,11 +92,9 @@ function AttackGuidance({ user }) {
         </div>
 
         {/* Title */}
-        <h2 className="ag-title">Asthma Attack Guidance</h2>
+        <h2 id="ag-title" className="ag-title">{t("title")}</h2>
         <div className="ag-divider" />
-        <p className="ag-subtitle">
-          This guided program will help you manage an asthma attack step by step. Follow the instructions carefully.
-        </p>
+        <p className="ag-subtitle">{t("subtitle")}</p>
 
         {/* Start button */}
         {!sessionId && (
@@ -94,8 +102,9 @@ function AttackGuidance({ user }) {
             onClick={startAttackFlow}
             disabled={loading}
             className="ag-btn-primary"
+            aria-label={loading ? t("starting") : t("start")}
           >
-            {loading ? "Starting…" : "Start Emergency Guidance"}
+            {loading ? t("starting") : t("start")}
           </button>
         )}
 
@@ -112,7 +121,7 @@ function AttackGuidance({ user }) {
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
                       <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
                     </svg>
-                    {step.timerSeconds}s
+                    {step.timerSeconds}{t("timerSuffix")}
                   </span>
                 </div>
               </div>
@@ -126,36 +135,43 @@ function AttackGuidance({ user }) {
             <button
               onClick={() => handleCheck(true)}
               className="ag-btn-improving"
+              aria-label={t("improving")}
             >
-              ✓ Improving
+              ✓ {t("improving")}
             </button>
             <button
               onClick={() => handleCheck(false)}
               className="ag-btn-not-improving"
+              aria-label={t("notImproving")}
             >
-              ✗ Not Improving
+              ✗ {t("notImproving")}
             </button>
           </div>
         )}
 
         {/* Status message */}
         {message && (
-          <p className="ag-message">{message}</p>
+          <p className="ag-message" aria-live="polite">{message}</p>
         )}
 
         {/* Emergency block */}
         {emergency && (
-          <div className="ag-emergency-box">
+          <div
+            className="ag-emergency-box"
+            role="alert"
+            tabIndex={-1}
+            ref={emergencyRef}
+          >
             <p className="ag-emergency-title">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
                 <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
                 <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
               </svg>
-              Emergency Assistance Needed
+              {t("emergencyTitle")}
             </p>
             <div className="ag-emergency-actions">
               <a href="tel:911" className="ag-call-btn">
-                 Call Emergency Services
+                 {t("callEmergency")}
               </a>
 
               <a
@@ -164,9 +180,15 @@ function AttackGuidance({ user }) {
                 rel="noreferrer"
                 className="ag-hospital-btn"
               >
-                 Find Nearest Hospital
+                 {t("findHospital")}
               </a>
             </div>
+          </div>
+        )}
+
+        {showMap && (
+          <div style={{ marginTop: 12 }}>
+            <HospitalMap />
           </div>
         )}
       </div>
