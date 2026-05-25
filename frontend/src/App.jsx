@@ -141,6 +141,7 @@ function App() {
   const homeStats = useMemo(() => {
     const latest = logs[0] || null;
     const moodByValue = Object.fromEntries(moods.map((m) => [m.value, m]));
+    const symptomLabels = Object.fromEntries(quickSymptoms.map((symptom) => [symptom.id, symptom.label]));
     const moodMeta = latest ? moodByValue[latest.mood] : null;
 
     const symptomCounts = {};
@@ -151,7 +152,8 @@ function App() {
     });
 
     const topSymptomEntry = Object.entries(symptomCounts).sort((a, b) => b[1] - a[1])[0] || ["none", 0];
-    const topSymptom = topSymptomEntry[0] === "none" ? "None" : topSymptomEntry[0];
+    const topSymptomId = topSymptomEntry[0] === "none" ? "None" : topSymptomEntry[0];
+    const topSymptom = topSymptomId === "None" ? "None" : (symptomLabels[topSymptomId] || topSymptomId);
     const topSymptomCount = topSymptomEntry[1] || 0;
 
     const avgSymptomSeverity = logs.length
@@ -161,8 +163,10 @@ function App() {
     return {
       latestMoodIcon: moodMeta?.icon || "🙂",
       latestMoodLabel: moodMeta?.label || "No logs",
+      latestMoodValue: latest?.mood || 0,
       latestSymptomCount: (latest?.symptoms || []).length,
       topSymptom,
+      topSymptomId,
       topSymptomCount,
       avgSymptomSeverity,
       hasLogs: logs.length > 0,
@@ -330,7 +334,12 @@ function App() {
   
 
   return (
- <div className="mx-auto min-h-screen w-full max-w-md bg-stone-50 pb-24">
+    <div className="app-shell">
+      <div className="app-blob app-blob-1" aria-hidden="true" />
+      <div className="app-blob app-blob-2" aria-hidden="true" />
+      <div className="app-blob app-blob-3" aria-hidden="true" />
+
+      <div className="relative z-10 mx-auto min-h-screen w-full max-w-md pb-24">
       {/* Header */}
       <header className="sticky top-0 z-40 border-b border-stone-200 bg-white/95 backdrop-blur">
         <div className="flex items-center justify-between px-4 py-4">
@@ -494,7 +503,8 @@ function App() {
 
       {tab === "settings" && <Settings user={user} />}
       <Navbar activeTab={tab} onChange={setTab} />
-    </div>
+        </div>
+      </div>
   );
 }
 

@@ -18,6 +18,8 @@ export default function Dashboard({
   onQuickSubmit,
 }) {
   const moodColors = { 5: "#1D9E75", 4: "#5DCAA5", 3: "#888780", 2: "#F0997B", 1: "#D85A30" };
+  const moodLabel = homeStats.latestMoodLabel || "No logs";
+  const topPatternLabel = homeStats.topSymptom || "None";
   return (
     <div className="space-y-3">
   <section
@@ -62,33 +64,30 @@ export default function Dashboard({
   {/* Mood */}
   <StatBox
     value={
-      <div className="relative w-full">
+      <div className="flex flex-col items-center justify-center gap-1 text-center">
         <i
           className={`ti ${homeStats.latestMoodIcon}`}
-          style={{
-            position: "absolute",
-            top: 0,
-            right: 0,
-            color: moodColors[homeStats.latestMoodValue] || "oklch(0.62 0.11 220)",
-            fontSize: "1.2rem",
-          }}
+          style={{ color: moodColors[homeStats.latestMoodValue] || "oklch(0.62 0.11 220)", fontSize: "1.2rem" }}
           aria-hidden="true"
         />
+        <span className="text-sm font-semibold leading-none text-stone-700">
+          {moodLabel}
+        </span>
       </div>
     }
-    label={homeStats.latestMoodLabel}
+    label="Mood"
   />
 
   {/* Symptoms */}
   <StatBox
     value={
-      <div className="relative w-full">
+      <div className="flex flex-col items-center justify-center gap-1 text-center">
         <Activity
-          className="absolute top-0 right-0 h-4 w-4"
-          style={{ color: "oklch(0.62 0.11 150)" }}  // green tone
+          className="h-4 w-4"
+          style={{ color: "oklch(0.62 0.11 150)" }}
         />
         <span
-          className="block text-center"
+          className="block text-center text-lg font-semibold leading-none"
           style={{ color: "oklch(0.45 0.05 150)" }}
         >
           {String(homeStats.latestSymptomCount)}
@@ -101,24 +100,17 @@ export default function Dashboard({
   {/* Top Symptom */}
  <StatBox
   value={
-    <div className="relative w-full">
+    <div className="flex flex-col items-center justify-center gap-1 text-center">
       <TrendingUp
-        className="absolute top-0 right-0 h-4 w-4"
+        className="h-4 w-4"
         style={{ color: "oklch(0.55 0.05 220)" }}
       />
 
       <span
-        className="block text-center transition-all duration-200"
-        style={{
-          fontSize:
-            homeStats.topSymptom === "None" ? "0.75rem" : "0.875rem",
-          color:
-            homeStats.topSymptom === "None"
-              ? "oklch(0.55 0.03 220)"
-              : "oklch(0.40 0.03 220)",
-        }}
+        className="block text-center text-xs font-semibold leading-tight transition-all duration-200"
+        style={{ color: topPatternLabel === "None" ? "oklch(0.55 0.03 220)" : "oklch(0.40 0.03 220)" }}
       >
-        {homeStats.topSymptom}
+        {topPatternLabel}
       </span>
     </div>
   }
@@ -128,13 +120,13 @@ export default function Dashboard({
   {/* Risk Score */}
   <StatBox
     value={
-      <div className="relative w-full">
+      <div className="flex flex-col items-center justify-center gap-1 text-center">
         <Gauge
-          className="absolute top-0 right-0 h-4 w-4"
-          style={{ color: "oklch(0.60 0.12 250)" }} // blue tone
+          className="h-4 w-4"
+          style={{ color: "oklch(0.60 0.12 250)" }}
         />
         <span
-          className="block text-center"
+          className="block text-center text-lg font-semibold leading-none"
           style={{ color: "oklch(0.40 0.08 250)" }}
         >
           {Math.round(risk.score * 100)}

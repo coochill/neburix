@@ -9,7 +9,7 @@
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display",
     "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
 
-  background: radial-gradient(circle at 8% 0%, #fef3c7 0%, #f8fafc 35%, #eef2ff 100%);
+  background: #f0faf5;
   color: #111827;
 
   font-synthesis: none;
@@ -25,6 +25,62 @@ body {
 
 #root {
   min-height: 100vh;
+}
+
+.app-shell {
+  position: relative;
+  min-height: 100vh;
+  overflow: hidden;
+  background: #f0faf5;
+}
+
+.app-blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.45;
+  pointer-events: none;
+  animation: blobFloat 8s ease-in-out infinite;
+}
+
+.app-blob-1 {
+  width: 520px;
+  height: 520px;
+  background: radial-gradient(circle, #4dd9ac 0%, #19c2e6 100%);
+  top: -160px;
+  left: -120px;
+  animation-delay: 0s;
+}
+
+.app-blob-2 {
+  width: 380px;
+  height: 380px;
+  background: radial-gradient(circle, #56e89a 0%, #17d1c4 100%);
+  bottom: -100px;
+  right: -80px;
+  animation-delay: -3s;
+}
+
+.app-blob-3 {
+  width: 260px;
+  height: 260px;
+  background: radial-gradient(circle, #a3f0d0 0%, #38c7df 100%);
+  top: 45%;
+  left: 60%;
+  animation-delay: -5s;
+}
+
+@keyframes blobFloat {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  33% {
+    transform: translate(20px, -25px) scale(1.04);
+  }
+  66% {
+    transform: translate(-15px, 18px) scale(0.97);
+  }
 }
 
 /* Optional: keep monospace for code */
